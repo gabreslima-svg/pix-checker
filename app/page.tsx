@@ -23,6 +23,8 @@ type Cobranca = {
   observacao: string | null;
   created_at: string;
   mudanca_nao_vista: boolean;
+  polling_ativo: boolean;
+  polling_inicio: string | null;
 };
 
 type HistoricoItem = {
@@ -58,10 +60,19 @@ function extrairBrCodes(input: string): string[] {
   return input.split(/[\n\r]+/).map((l) => l.trim()).filter(Boolean);
 }
 
-// Determina o status efetivo: se tem E2E em algum momento, foi paga
 function statusEfetivo(c: Cobranca): string | null {
   if (c.end_to_end_id) return "CONCLUIDA";
   return c.status;
+}
+
+function tempoDecorrido(inicio: string | null): string {
+  if (!inicio) return "—";
+  const min = Math.floor((Date.now() - new Date(inicio).getTime()) / 60000);
+  if (min < 1) return "agora";
+  if (min < 60) return min + "min";
+  const h = Math.floor(min / 60);
+  if (h < 24) return h + "h" + (min % 60 > 0 ? " " + (min % 60) + "m" : "");
+  return Math.floor(h / 24) + "d";
 }
 
 export default function Home() {
@@ -84,7 +95,11 @@ export default function Home() {
     if (!error && data) setCobrancas(data as Cobranca[]);
   }
 
-  useEffect(() => { carregar(); }, []);
+  useEffect(() => {
+    carregar();
+    const interval = setInterval(carregar, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   async function copiarTexto(texto: string, identificador: string) {
     try {
@@ -92,6 +107,14 @@ export default function Home() {
       setCopiado(identificador);
       setTimeout(() => setCopiado(null), 1500);
     } catch {}
+  }
+
+  async function togglePolling(c: Cobranca) {
+    await supabase.from("cobrancas").update({
+      polling_ativo: !c.polling_ativo,
+      polling_inicio: !c.polling_ativo ? new Date().toISOString() : c.polling_inicio,
+    }).eq("id", c.id);
+    await carregar();
   }
 
   async function consultarPorId(id: string, url: string) {
@@ -110,20 +133,13 @@ export default function Home() {
       const data = await res.json();
 
       const novoStatus = data.status || null;
-      const novoValor = data.valor || null;
       const novoErro = data.ok ? null : data.erro || "Erro desconhecido";
-
-      // PRINCIPIO: dados de pagamento sao IMUTAVEIS uma vez capturados
-      // Se em algum momento ja tivemos E2E/horario/pagador, mantemos para sempre
       const e2eFinal = data.endToEndId || antes?.end_to_end_id || null;
       const horarioFinal = data.horario || antes?.horario_pagamento || null;
       const nomeFinal = data.pagadorNome || antes?.pagador_nome || null;
       const docFinal = data.pagadorDocumento || antes?.pagador_documento || null;
-      const valorFinal = novoValor || antes?.valor || null;
-
-      const mudou = !antes || antes.status !== novoStatus
-        || antes.end_to_end_id !== e2eFinal
-        || antes.horario_pagamento !== horarioFinal;
+      const valorFinal = data.valor || antes?.valor || null;
+      const mudou = !antes || antes.status !== novoStatus || antes.end_to_end_id !== e2eFinal;
 
       await supabase.from("cobrancas").update({
         status: novoStatus,
@@ -137,11 +153,10 @@ export default function Home() {
         mudanca_nao_vista: mudou ? true : undefined,
       }).eq("id", id);
 
-      // Historico guarda exatamente o que o PSP retornou (snapshot fiel)
       await supabase.from("cobrancas_historico").insert({
         cobranca_id: id,
         status: novoStatus,
-        valor: novoValor,
+        valor: data.valor || null,
         end_to_end_id: data.endToEndId || null,
         horario_pagamento: data.horario || null,
         pagador_nome: data.pagadorNome || null,
@@ -176,6 +191,10 @@ export default function Home() {
 
       if (existente) {
         duplicados++;
+        await supabase.from("cobrancas").update({
+          polling_ativo: true,
+          polling_inicio: new Date().toISOString(),
+        }).eq("id", existente.id);
         if (existente.tipo === "dinamico" && existente.url) {
           idsParaConsultar.push({ id: existente.id, url: existente.url });
         }
@@ -189,6 +208,7 @@ export default function Home() {
           tipo: "estatico",
           merchant_name: parsed.merchantName,
           observacao: "Estatico: nao da pra consultar status",
+          polling_ativo: false,
         });
         continue;
       }
@@ -206,6 +226,8 @@ export default function Home() {
         psp: parsed.psp,
         merchant_name: parsed.merchantName,
         txid: parsed.txid,
+        polling_ativo: true,
+        polling_inicio: new Date().toISOString(),
       }).select("id").single();
 
       if (data?.id && parsed.url) {
@@ -216,7 +238,7 @@ export default function Home() {
     const partes: string[] = [];
     const novos = dinamicosNovos + estaticosNovos;
     if (novos > 0) partes.push(novos + " novo(s)");
-    if (duplicados > 0) partes.push(duplicados + " duplicado(s) re-consultado(s)");
+    if (duplicados > 0) partes.push(duplicados + " duplicado(s) reativado(s)");
     if (invalidos > 0) partes.push(invalidos + " invalido(s) ignorado(s)");
 
     setMsg(linhas.length + " encontrado(s): " + (partes.join(", ") || "nada"));
@@ -230,11 +252,7 @@ export default function Home() {
         await consultarPorId(item.id, item.url);
       }
       await carregar();
-      const final: string[] = [];
-      if (novos > 0) final.push(novos + " novo(s)");
-      if (duplicados > 0) final.push(duplicados + " duplicado(s) atualizado(s)");
-      if (invalidos > 0) final.push(invalidos + " invalido(s) ignorado(s)");
-      setMsg(linhas.length + " encontrado(s) · " + final.join(", "));
+      setMsg(linhas.length + " encontrado(s) - polling automatico ativado");
     }
 
     setLoading(false);
@@ -308,21 +326,21 @@ export default function Home() {
 
   const exibidas = filtroStatus === "todos"
     ? ordenadas
+    : filtroStatus === "polling_ativo"
+    ? ordenadas.filter((c) => c.polling_ativo && c.tipo === "dinamico")
+    : filtroStatus === "com_mudanca"
+    ? ordenadas.filter((c) => c.mudanca_nao_vista)
     : filtroStatus === "nao_consultados"
     ? ordenadas.filter((c) => !c.status && c.tipo === "dinamico")
     : filtroStatus === "estaticos"
     ? ordenadas.filter((c) => c.tipo === "estatico")
     : filtroStatus === "invalidos"
     ? ordenadas.filter((c) => c.tipo === "invalido")
-    : filtroStatus === "com_mudanca"
-    ? ordenadas.filter((c) => c.mudanca_nao_vista)
     : ordenadas.filter((c) => statusEfetivo(c) === filtroStatus);
 
   const totais = {
     total: cobrancas.length,
-    dinamicas: cobrancas.filter((c) => c.tipo === "dinamico").length,
-    estaticas: cobrancas.filter((c) => c.tipo === "estatico").length,
-    invalidas: cobrancas.filter((c) => c.tipo === "invalido").length,
+    pollingAtivo: cobrancas.filter((c) => c.polling_ativo && c.tipo === "dinamico").length,
     pagas: cobrancas.filter((c) => statusEfetivo(c) === "CONCLUIDA").length,
     pendentes: cobrancas.filter((c) => statusEfetivo(c) === "ATIVA").length,
     removidas: cobrancas.filter((c) => {
@@ -330,6 +348,7 @@ export default function Home() {
       return s && s.startsWith("REMOVIDA");
     }).length,
     comMudanca: cobrancas.filter((c) => c.mudanca_nao_vista).length,
+    invalidas: cobrancas.filter((c) => c.tipo === "invalido").length,
   };
 
   return (
@@ -342,11 +361,12 @@ export default function Home() {
             </div>
             <p style={styles.tagline}>
               <span style={styles.taglineSerif}>recupere </span>
-              vendas pagas que o webhook nao entregou
+              vendas pagas que o webhook nao entregou - polling automatico a cada 2 min
             </p>
           </div>
           <div style={styles.stats}>
             <Stat label="total" value={totais.total} />
+            <Stat label="polling" value={totais.pollingAtivo} color="var(--accent)" />
             <Stat label="pendentes" value={totais.pendentes} color="var(--yellow)" />
             <Stat label="pagas" value={totais.pagas} color="var(--green)" />
             <Stat label="removidas" value={totais.removidas} color="var(--red)" />
@@ -356,19 +376,19 @@ export default function Home() {
 
         <section style={styles.card}>
           <div style={styles.cardHeader}>
-            <span style={styles.cardLabel}>01 · adicionar e consultar BR Codes</span>
-            <span style={styles.cardHelp}>cola quantos quiser · quebras de linha sao ignoradas</span>
+            <span style={styles.cardLabel}>01 - adicionar e consultar BR Codes</span>
+            <span style={styles.cardHelp}>cola assim que gerar - polling captura o E2E sozinho</span>
           </div>
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="cola um ou mais BR Codes aqui, mesmo que com quebras de linha"
+            placeholder="cola um ou mais BR Codes aqui"
             style={styles.textarea}
             rows={5}
           />
           <div style={styles.actions}>
             <button onClick={adicionar} disabled={loading || !input.trim()} style={{ ...styles.btn, ...styles.btnPrimary }}>
-              {loading ? "processando..." : "adicionar e consultar"}
+              {loading ? "processando..." : "adicionar e iniciar polling"}
             </button>
             {msg && <span style={styles.msg}>{msg}</span>}
           </div>
@@ -376,10 +396,11 @@ export default function Home() {
 
         <section style={styles.card}>
           <div style={styles.cardHeader}>
-            <span style={styles.cardLabel}>02 · lista de cobrancas</span>
+            <span style={styles.cardLabel}>02 - lista de cobrancas</span>
             <div style={styles.cardActions}>
               <select value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)} style={styles.select}>
-                <option value="todos">todos os status</option>
+                <option value="todos">todos</option>
+                <option value="polling_ativo">com polling ativo</option>
                 <option value="com_mudanca">apenas com mudanca</option>
                 <option value="nao_consultados">nao consultados</option>
                 <option value="ATIVA">ATIVA / pendente</option>
@@ -398,7 +419,7 @@ export default function Home() {
                   limpar invalidos ({totais.invalidas})
                 </button>
               )}
-              <button onClick={verificarTodas} disabled={loading || totais.dinamicas === 0} style={{ ...styles.btn, ...styles.btnSecondary }}>
+              <button onClick={verificarTodas} disabled={loading} style={{ ...styles.btn, ...styles.btnSecondary }}>
                 re-consultar todas
               </button>
             </div>
@@ -415,13 +436,13 @@ export default function Home() {
               <div style={styles.tableHead}>
                 <div style={{ flex: "0 0 28px" }}></div>
                 <div style={{ flex: "0 0 80px" }}>tipo</div>
-                <div style={{ flex: "1 1 140px" }}>PSP</div>
+                <div style={{ flex: "1 1 130px" }}>PSP</div>
                 <div style={{ flex: "1 1 160px" }}>merchant / txid</div>
                 <div style={{ flex: "0 0 90px" }}>valor</div>
                 <div style={{ flex: "0 0 180px" }}>status</div>
                 <div style={{ flex: "1 1 220px" }}>E2E / pagador</div>
-                <div style={{ flex: "0 0 110px" }}>checagem</div>
-                <div style={{ flex: "0 0 110px" }}>acao</div>
+                <div style={{ flex: "0 0 100px" }}>polling</div>
+                <div style={{ flex: "0 0 130px" }}>acao</div>
               </div>
               {exibidas.map((c) => (
                 <CobrancaRow
@@ -433,6 +454,7 @@ export default function Home() {
                   onRemover={() => remover(c.id)}
                   onHistorico={() => abrirHistorico(c)}
                   onCopiar={copiarTexto}
+                  onTogglePolling={() => togglePolling(c)}
                 />
               ))}
             </div>
@@ -450,7 +472,7 @@ export default function Home() {
         )}
 
         <footer style={styles.footer}>
-          <span>consulta direta no endpoint publico do PSP · sem mover dinheiro</span>
+          <span>consulta direta no endpoint publico do PSP - polling automatico via Vercel Cron</span>
         </footer>
       </div>
     </main>
@@ -471,26 +493,21 @@ function CopyButton({ texto, identificador, copiado, onCopiar }: {
 }) {
   const ativo = copiado === identificador;
   return (
-    <button
-      onClick={() => onCopiar(texto, identificador)}
-      style={{ ...styles.copyBtn, color: ativo ? "var(--green)" : "var(--text-faint)" }}
-      title="copiar"
-    >
-      {ativo ? "✓" : "⎘"}
+    <button onClick={() => onCopiar(texto, identificador)} style={{ ...styles.copyBtn, color: ativo ? "var(--green)" : "var(--text-faint)" }} title="copiar">
+      {ativo ? "OK" : "copy"}
     </button>
   );
 }
 
 function CobrancaRow({
-  c, verificando, copiado, onVerificar, onRemover, onHistorico, onCopiar,
+  c, verificando, copiado, onVerificar, onRemover, onHistorico, onCopiar, onTogglePolling,
 }: {
   c: Cobranca; verificando: boolean; copiado: string | null;
   onVerificar: () => void; onRemover: () => void; onHistorico: () => void;
   onCopiar: (t: string, id: string) => void;
+  onTogglePolling: () => void;
 }) {
   const statusEfet = statusEfetivo(c);
-  // statusAtual = o que o PSP devolveu na ultima checagem (raw)
-  const statusAtualPSP = c.status;
   const mostraDivergencia = c.end_to_end_id && c.status && c.status !== "CONCLUIDA";
 
   const statusColor =
@@ -516,18 +533,16 @@ function CobrancaRow({
       <div style={{ flex: "0 0 80px" }}>
         <span style={{ ...styles.tipoBadge, background: tipoStyle.bg, color: tipoStyle.fg }}>{c.tipo}</span>
       </div>
-      <div style={{ flex: "1 1 140px", ...styles.cellDim }}>{c.psp || "—"}</div>
+      <div style={{ flex: "1 1 130px", ...styles.cellDim }}>{c.psp || "-"}</div>
       <div style={{ flex: "1 1 160px", overflow: "hidden" }}>
-        <div style={styles.cellMain}>{c.merchant_name || "—"}</div>
-        <div style={styles.cellSub}>{c.txid || c.erro || "—"}</div>
+        <div style={styles.cellMain}>{c.merchant_name || "-"}</div>
+        <div style={styles.cellSub}>{c.txid || c.erro || "-"}</div>
       </div>
-      <div style={{ flex: "0 0 90px" }}>{c.valor ? "R$ " + c.valor : <span style={styles.cellFaint}>—</span>}</div>
+      <div style={{ flex: "0 0 90px" }}>{c.valor ? "R$ " + c.valor : <span style={styles.cellFaint}>-</span>}</div>
       <div style={{ flex: "0 0 180px" }}>
         {statusLabel ? <span style={{ color: statusColor, fontWeight: 500 }}>{statusLabel}</span> : <span style={styles.cellFaint}>nao consultado</span>}
         {mostraDivergencia && (
-          <div style={styles.statusDivergencia} title="O PSP devolveu este status na ultima consulta, mas o pagamento foi confirmado via E2E">
-            PSP agora: {STATUS_LABELS[statusAtualPSP!] || statusAtualPSP}
-          </div>
+          <div style={styles.statusDivergencia}>PSP agora: {STATUS_LABELS[c.status!] || c.status}</div>
         )}
       </div>
       <div style={{ flex: "1 1 220px", overflow: "hidden" }}>
@@ -540,28 +555,42 @@ function CobrancaRow({
             {(c.pagador_nome || c.pagador_documento) && (
               <div style={styles.pagadorInfo}>
                 {c.pagador_nome && <span>{c.pagador_nome}</span>}
-                {c.pagador_nome && c.pagador_documento && <span> · </span>}
+                {c.pagador_nome && c.pagador_documento && <span> - </span>}
                 {c.pagador_documento && <span>{c.pagador_documento}</span>}
               </div>
             )}
           </>
         ) : (
-          <span style={styles.cellFaint}>—</span>
+          <span style={styles.cellFaint}>-</span>
         )}
       </div>
-      <div style={{ flex: "0 0 110px", ...styles.cellDim, fontSize: 11 }}>
-        {c.ultima_checagem ? new Date(c.ultima_checagem).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—"}
+      <div style={{ flex: "0 0 100px", fontSize: 11 }}>
+        {c.tipo === "dinamico" ? (
+          c.polling_ativo ? (
+            <div>
+              <span style={styles.pollingAtivo}>ativo</span>
+              <div style={styles.pollingTempo}>{tempoDecorrido(c.polling_inicio)}</div>
+            </div>
+          ) : (
+            <span style={styles.pollingInativo}>pausado</span>
+          )
+        ) : (
+          <span style={styles.cellFaint}>-</span>
+        )}
       </div>
-      <div style={{ flex: "0 0 110px", display: "flex", gap: 6 }}>
-        <button onClick={onHistorico} style={{ ...styles.btnSmall, ...styles.btnGhost }} title="historico">
-          👁
-        </button>
+      <div style={{ flex: "0 0 130px", display: "flex", gap: 4 }}>
+        <button onClick={onHistorico} style={{ ...styles.btnSmall, ...styles.btnGhost }} title="historico">H</button>
         {c.tipo === "dinamico" && (
-          <button onClick={onVerificar} disabled={verificando} style={{ ...styles.btnSmall, ...styles.btnPrimary }}>
-            {verificando ? "..." : "↻"}
-          </button>
+          <>
+            <button onClick={onTogglePolling} style={{ ...styles.btnSmall, ...styles.btnGhost }} title={c.polling_ativo ? "pausar polling" : "retomar polling"}>
+              {c.polling_ativo ? "P" : "R"}
+            </button>
+            <button onClick={onVerificar} disabled={verificando} style={{ ...styles.btnSmall, ...styles.btnPrimary }} title="consultar agora">
+              {verificando ? "..." : "C"}
+            </button>
+          </>
         )}
-        <button onClick={onRemover} style={{ ...styles.btnSmall, ...styles.btnGhost }}>×</button>
+        <button onClick={onRemover} style={{ ...styles.btnSmall, ...styles.btnGhost }}>X</button>
       </div>
     </div>
   );
@@ -573,26 +602,18 @@ function HistoricoModal({
   cobranca: Cobranca; historico: HistoricoItem[]; onClose: () => void;
   onCopiar: (t: string, id: string) => void; copiado: string | null;
 }) {
-  const efetivo = statusEfetivo(cobranca);
-  const corEfetivo =
-    efetivo === "CONCLUIDA" ? "var(--green)" :
-    efetivo === "ATIVA" ? "var(--yellow)" :
-    "var(--text-faint)";
-
   return (
     <div style={styles.modalBackdrop} onClick={onClose}>
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div style={styles.modalHeader}>
           <div>
             <div style={styles.modalTitle}>historico de consultas</div>
-            <div style={styles.modalSubtitle}>{cobranca.merchant_name} · {cobranca.txid || "—"}</div>
+            <div style={styles.modalSubtitle}>{cobranca.merchant_name} - {cobranca.txid || "-"}</div>
             {cobranca.end_to_end_id && (
-              <div style={{ ...styles.modalConfirmado, color: corEfetivo }}>
-                ✓ pagamento confirmado · E2E capturado
-              </div>
+              <div style={styles.modalConfirmado}>pagamento confirmado - E2E capturado</div>
             )}
           </div>
-          <button onClick={onClose} style={styles.modalClose}>×</button>
+          <button onClick={onClose} style={styles.modalClose}>X</button>
         </div>
 
         {historico.length === 0 ? (
@@ -616,13 +637,11 @@ function HistoricoModal({
                     <div style={styles.timelineWhen}>
                       {new Date(h.consultado_em).toLocaleString("pt-BR")}
                       {idx === 0 && <span style={styles.timelineBadge}> ultima</span>}
-                      {mudouStatus && <span style={styles.timelineMudou}> · mudou de "{anterior?.status || "—"}"</span>}
+                      {mudouStatus && <span style={styles.timelineMudou}> - mudou de {anterior?.status || "-"}</span>}
                     </div>
                     <div style={styles.timelineStatus}>
-                      <span style={{ color: cor, fontWeight: 600 }}>
-                        {h.status ? (STATUS_LABELS[h.status] || h.status) : "—"}
-                      </span>
-                      {h.valor && <span style={styles.cellDim}> · R$ {h.valor}</span>}
+                      <span style={{ color: cor, fontWeight: 600 }}>{h.status ? (STATUS_LABELS[h.status] || h.status) : "-"}</span>
+                      {h.valor && <span style={styles.cellDim}> - R$ {h.valor}</span>}
                     </div>
                     {h.end_to_end_id && (
                       <div style={styles.timelineE2eBox}>
@@ -631,15 +650,10 @@ function HistoricoModal({
                       </div>
                     )}
                     {(h.pagador_nome || h.pagador_documento) && (
-                      <div style={styles.timelinePagador}>
-                        pagador: {h.pagador_nome || "—"}
-                        {h.pagador_documento && <span> · {h.pagador_documento}</span>}
-                      </div>
+                      <div style={styles.timelinePagador}>pagador: {h.pagador_nome || "-"}{h.pagador_documento && <span> - {h.pagador_documento}</span>}</div>
                     )}
                     {h.horario_pagamento && (
-                      <div style={styles.timelineExtra}>
-                        pago em: {new Date(h.horario_pagamento).toLocaleString("pt-BR")}
-                      </div>
+                      <div style={styles.timelineExtra}>pago em: {new Date(h.horario_pagamento).toLocaleString("pt-BR")}</div>
                     )}
                     {h.erro && <div style={styles.timelineErro}>{h.erro}</div>}
                   </div>
@@ -655,7 +669,7 @@ function HistoricoModal({
 
 const styles: { [k: string]: React.CSSProperties } = {
   main: { minHeight: "100vh", padding: "32px 24px 60px" },
-  container: { maxWidth: 1400, margin: "0 auto" },
+  container: { maxWidth: 1500, margin: "0 auto" },
   header: { display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 24, marginBottom: 40, paddingBottom: 24, borderBottom: "1px solid var(--border)", flexWrap: "wrap" },
   logo: { fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", display: "flex", alignItems: "center", gap: 8 },
   logoDot: { color: "var(--accent)", fontSize: 12 },
@@ -679,26 +693,14 @@ const styles: { [k: string]: React.CSSProperties } = {
   btnSecondary: { background: "var(--bg-elevated)", color: "var(--text)", border: "1px solid var(--border-strong)" },
   btnGhost: { background: "transparent", color: "var(--text-faint)", border: "1px solid var(--border)" },
   btnSmall: { padding: "6px 10px", fontSize: 12, borderRadius: 4, fontWeight: 600 },
-  copyBtn: {
-    background: "transparent", border: "none", padding: "2px 6px",
-    fontSize: 14, cursor: "pointer", borderRadius: 3,
-    transition: "all 0.15s",
-  },
+  copyBtn: { background: "transparent", border: "none", padding: "2px 6px", fontSize: 11, cursor: "pointer", borderRadius: 3 },
   e2eCell: { display: "flex", alignItems: "center", gap: 4 },
-  e2eCode: {
-    fontFamily: "var(--mono)", fontSize: 11, color: "var(--green)",
-    background: "rgba(46, 230, 141, 0.08)", padding: "3px 6px",
-    borderRadius: 3, whiteSpace: "nowrap", overflow: "hidden",
-    textOverflow: "ellipsis", maxWidth: 240, flex: 1,
-  },
-  pagadorInfo: {
-    fontSize: 10, color: "var(--text-faint)", marginTop: 3,
-    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-  },
-  statusDivergencia: {
-    fontSize: 9, color: "var(--text-faint)", marginTop: 4,
-    fontStyle: "italic",
-  },
+  e2eCode: { fontFamily: "var(--mono)", fontSize: 11, color: "var(--green)", background: "rgba(46, 230, 141, 0.08)", padding: "3px 6px", borderRadius: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 240, flex: 1 },
+  pagadorInfo: { fontSize: 10, color: "var(--text-faint)", marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+  statusDivergencia: { fontSize: 9, color: "var(--text-faint)", marginTop: 4, fontStyle: "italic" },
+  pollingAtivo: { color: "var(--accent)", fontWeight: 600, fontSize: 10 },
+  pollingInativo: { color: "var(--text-faint)", fontSize: 10 },
+  pollingTempo: { color: "var(--text-faint)", fontSize: 9, marginTop: 2 },
   msg: { fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 14, color: "var(--text-dim)" },
   empty: { padding: "60px 20px", textAlign: "center", border: "1px dashed var(--border)", borderRadius: 6 },
   emptyText: { color: "var(--text-faint)", fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 16 },
@@ -711,49 +713,24 @@ const styles: { [k: string]: React.CSSProperties } = {
   cellDim: { color: "var(--text-dim)" },
   cellFaint: { color: "var(--text-faint)" },
   footer: { marginTop: 40, paddingTop: 20, borderTop: "1px solid var(--border)", textAlign: "center", color: "var(--text-faint)", fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 13 },
-  bolinhaAmarela: {
-    display: "inline-block", width: 10, height: 10, borderRadius: "50%",
-    background: "var(--yellow)", boxShadow: "0 0 8px rgba(245, 197, 66, 0.6)",
-  },
-  modalBackdrop: {
-    position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    zIndex: 100, padding: 20, backdropFilter: "blur(4px)",
-  },
-  modal: {
-    background: "var(--bg-card)", border: "1px solid var(--border-strong)",
-    borderRadius: 10, padding: 24, maxWidth: 720, width: "100%",
-    maxHeight: "85vh", overflowY: "auto",
-  },
-  modalHeader: {
-    display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-    marginBottom: 20, paddingBottom: 16, borderBottom: "1px solid var(--border)",
-  },
+  bolinhaAmarela: { display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: "var(--yellow)", boxShadow: "0 0 8px rgba(245, 197, 66, 0.6)" },
+  modalBackdrop: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 20, backdropFilter: "blur(4px)" },
+  modal: { background: "var(--bg-card)", border: "1px solid var(--border-strong)", borderRadius: 10, padding: 24, maxWidth: 720, width: "100%", maxHeight: "85vh", overflowY: "auto" },
+  modalHeader: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, paddingBottom: 16, borderBottom: "1px solid var(--border)" },
   modalTitle: { fontSize: 14, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.15em" },
   modalSubtitle: { fontSize: 16, color: "var(--text)", marginTop: 6 },
-  modalConfirmado: {
-    fontSize: 12, marginTop: 8, fontWeight: 600,
-  },
-  modalClose: {
-    background: "transparent", color: "var(--text-faint)", fontSize: 24,
-    width: 32, height: 32, borderRadius: 4, border: "none", cursor: "pointer",
-  },
+  modalConfirmado: { fontSize: 12, marginTop: 8, fontWeight: 600, color: "var(--green)" },
+  modalClose: { background: "transparent", color: "var(--text-faint)", fontSize: 20, width: 32, height: 32, borderRadius: 4, border: "none", cursor: "pointer" },
   timeline: { display: "flex", flexDirection: "column", gap: 0, position: "relative" },
   timelineItem: { display: "flex", gap: 16, padding: "12px 0", borderLeft: "1px solid var(--border)", marginLeft: 6, paddingLeft: 24, position: "relative" },
-  timelineDot: {
-    position: "absolute", left: -6, top: 16, width: 13, height: 13,
-    borderRadius: "50%", border: "2px solid var(--bg-card)",
-  },
+  timelineDot: { position: "absolute", left: -6, top: 16, width: 13, height: 13, borderRadius: "50%", border: "2px solid var(--bg-card)" },
   timelineContent: { flex: 1 },
   timelineWhen: { fontSize: 11, color: "var(--text-faint)" },
   timelineBadge: { color: "var(--accent)", fontWeight: 700, marginLeft: 6 },
   timelineMudou: { color: "var(--yellow)", fontStyle: "italic" },
   timelineStatus: { fontSize: 13, marginTop: 4 },
   timelineE2eBox: { marginTop: 6, display: "flex", alignItems: "center", gap: 6 },
-  timelineE2e: {
-    fontSize: 11, color: "var(--green)", background: "rgba(46, 230, 141, 0.08)",
-    padding: "4px 8px", borderRadius: 4, fontFamily: "var(--mono)",
-  },
+  timelineE2e: { fontSize: 11, color: "var(--green)", background: "rgba(46, 230, 141, 0.08)", padding: "4px 8px", borderRadius: 4, fontFamily: "var(--mono)" },
   timelinePagador: { fontSize: 11, color: "var(--text-dim)", marginTop: 4 },
   timelineExtra: { fontSize: 11, color: "var(--text-dim)", marginTop: 2 },
   timelineErro: { fontSize: 11, color: "var(--red)", marginTop: 4 },
