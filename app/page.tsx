@@ -32,6 +32,24 @@ const STATUS_LABELS: { [k: string]: string } = {
   AUTH_NECESSARIA: "auth necessaria",
 };
 
+// Extrai BR Codes de um bloco de texto, lidando com quebras de linha aleatorias
+// Procura padrao: 0002... + qualquer coisa + 6304XXXX (CRC de 4 hex)
+function extrairBrCodes(input: string): string[] {
+  // Remove TODAS as quebras de linha e espacos
+  const limpo = input.replace(/\s+/g, "");
+
+  // Regex: comeca com 00020 (Payload Format Indicator + valor 01) ate 6304 + 4 hex
+  const regex = /00020[0-9]\d{2,4}.*?6304[0-9A-Fa-f]{4}/g;
+  const matches = limpo.match(regex);
+
+  if (matches && matches.length > 0) {
+    return matches;
+  }
+
+  // Fallback: se nao casou regex, tenta processar como antes (linha por linha)
+  return input.split(/[\n\r]+/).map((l) => l.trim()).filter(Boolean);
+}
+
 export default function Home() {
   const [input, setInput] = useState("");
   const [cobrancas, setCobrancas] = useState<Cobranca[]>([]);
@@ -80,7 +98,8 @@ export default function Home() {
     setLoading(true);
     setMsg("");
 
-    const linhas = input.split(/[\n\r]+/).map((l) => l.trim()).filter(Boolean);
+    // Usa o extrator inteligente
+    const linhas = extrairBrCodes(input);
 
     let dinamicosNovos = 0, estaticosNovos = 0, invalidos = 0, duplicados = 0;
     const idsParaConsultar: { id: string; url: string }[] = [];
@@ -88,7 +107,6 @@ export default function Home() {
     for (const linha of linhas) {
       const parsed = parseBrCode(linha);
 
-      // Verifica duplicado pelo brcode exato
       const { data: existente } = await supabase
         .from("cobrancas")
         .select("id, tipo, url")
@@ -97,7 +115,6 @@ export default function Home() {
 
       if (existente) {
         duplicados++;
-        // Se for dinamico, ja agenda re-consulta
         if (existente.tipo === "dinamico" && existente.url) {
           idsParaConsultar.push({ id: existente.id, url: existente.url });
         }
@@ -117,11 +134,7 @@ export default function Home() {
 
       if (parsed.tipo === "invalido") {
         invalidos++;
-        await supabase.from("cobrancas").insert({
-          brcode: linha.substring(0, 200),
-          tipo: "invalido",
-          erro: parsed.erro,
-        });
+        // NAO insere mais invalidos no banco (so conta)
         continue;
       }
 
@@ -144,13 +157,12 @@ export default function Home() {
     const novos = dinamicosNovos + estaticosNovos;
     if (novos > 0) partes.push(novos + " novo(s)");
     if (duplicados > 0) partes.push(duplicados + " duplicado(s) re-consultado(s)");
-    if (invalidos > 0) partes.push(invalidos + " invalido(s)");
+    if (invalidos > 0) partes.push(invalidos + " invalido(s) ignorado(s)");
 
-    setMsg(linhas.length + " processado(s): " + (partes.join(", ") || "nada"));
+    setMsg(linhas.length + " encontrado(s): " + (partes.join(", ") || "nada"));
     setInput("");
     await carregar();
 
-    // Consulta os dinamicos (novos + duplicados re-consultados)
     if (idsParaConsultar.length > 0) {
       for (let i = 0; i < idsParaConsultar.length; i++) {
         const item = idsParaConsultar[i];
@@ -161,8 +173,8 @@ export default function Home() {
       const final: string[] = [];
       if (novos > 0) final.push(novos + " novo(s)");
       if (duplicados > 0) final.push(duplicados + " duplicado(s) atualizado(s)");
-      if (invalidos > 0) final.push(invalidos + " invalido(s)");
-      setMsg(linhas.length + " processado(s) · " + final.join(", "));
+      if (invalidos > 0) final.push(invalidos + " invalido(s) ignorado(s)");
+      setMsg(linhas.length + " encontrado(s) · " + final.join(", "));
     }
 
     setLoading(false);
@@ -197,6 +209,12 @@ export default function Home() {
     await carregar();
   }
 
+  async function limparInvalidos() {
+    if (!confirm("Remover todos os registros invalidos da tabela?")) return;
+    await supabase.from("cobrancas").delete().eq("tipo", "invalido");
+    await carregar();
+  }
+
   const ordenadas = [...cobrancas].sort((a, b) => {
     const aT = a.ultima_checagem ? new Date(a.ultima_checagem).getTime() : 0;
     const bT = b.ultima_checagem ? new Date(b.ultima_checagem).getTime() : 0;
@@ -214,12 +232,15 @@ export default function Home() {
     ? ordenadas.filter((c) => !c.status && c.tipo === "dinamico")
     : filtroStatus === "estaticos"
     ? ordenadas.filter((c) => c.tipo === "estatico")
+    : filtroStatus === "invalidos"
+    ? ordenadas.filter((c) => c.tipo === "invalido")
     : ordenadas.filter((c) => c.status === filtroStatus);
 
   const totais = {
     total: cobrancas.length,
     dinamicas: cobrancas.filter((c) => c.tipo === "dinamico").length,
     estaticas: cobrancas.filter((c) => c.tipo === "estatico").length,
+    invalidas: cobrancas.filter((c) => c.tipo === "invalido").length,
     pagas: cobrancas.filter((c) => c.status === "CONCLUIDA").length,
     pendentes: cobrancas.filter((c) => c.status === "ATIVA").length,
     removidas: cobrancas.filter((c) => c.status && c.status.startsWith("REMOVIDA")).length,
@@ -251,12 +272,12 @@ export default function Home() {
         <section style={styles.card}>
           <div style={styles.cardHeader}>
             <span style={styles.cardLabel}>01 · adicionar e consultar BR Codes</span>
-            <span style={styles.cardHelp}>um por linha · duplicados sao re-consultados</span>
+            <span style={styles.cardHelp}>cola quantos quiser · quebras de linha sao ignoradas</span>
           </div>
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="00020126850014br.gov.bcb.pix2563pix.onlyup.com.br/qr/v3/at/..."
+            placeholder="cola um ou mais BR Codes aqui, mesmo que com quebras de linha"
             style={styles.textarea}
             rows={5}
           />
@@ -283,7 +304,13 @@ export default function Home() {
                 <option value="NAO_ENCONTRADA">nao encontrada (404)</option>
                 <option value="AUTH_NECESSARIA">auth necessaria</option>
                 <option value="estaticos">apenas estaticos</option>
+                <option value="invalidos">apenas invalidos</option>
               </select>
+              {totais.invalidas > 0 && (
+                <button onClick={limparInvalidos} style={{ ...styles.btn, ...styles.btnGhost }}>
+                  limpar invalidos ({totais.invalidas})
+                </button>
+              )}
               <button onClick={verificarTodas} disabled={loading || totais.dinamicas === 0} style={{ ...styles.btn, ...styles.btnSecondary }}>
                 re-consultar todas
               </button>
