@@ -6,18 +6,39 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-function deveConsultar(c: any, exec: number): boolean {
+// Status finais: nao precisa mais consultar
+const STATUS_FINAIS = new Set([
+  "CONCLUIDA",
+  "REMOVIDA_PERMANENTE",
+  "REMOVIDA_PELO_PSP",
+  "REMOVIDA_PELO_USUARIO_RECEBEDOR",
+  "NAO_ENCONTRADA",
+]);
+
+// Decide se consulta agora baseado na idade e regra do usuario:
+// - Janela de monitoramento: 30 minutos apos criar
+// - Se status ja for final, nao consulta
+// - Se passou de 30 min sem virar pago, para
+function deveConsultar(c: any): { consulta: boolean; desativar: boolean } {
   const inicio = new Date(c.polling_inicio || c.created_at).getTime();
   const idadeMin = (Date.now() - inicio) / 60000;
-  if (idadeMin > 360) return false;
-  if (idadeMin < 30) return true;
-  if (idadeMin < 120) return exec % 3 === 0;
-  return exec % 6 === 0;
-}
 
-function expirou(c: any): boolean {
-  const inicio = new Date(c.polling_inicio || c.created_at).getTime();
-  return (Date.now() - inicio) / 60000 > 360;
+  // Janela: 30 minutos
+  if (idadeMin > 30) {
+    return { consulta: false, desativar: true };
+  }
+
+  // Se ja tem E2E (foi paga), nao precisa consultar mais
+  if (c.end_to_end_id) {
+    return { consulta: false, desativar: true };
+  }
+
+  // Se status atual e final (removida/nao encontrada), nao consulta mais
+  if (c.status && STATUS_FINAIS.has(c.status)) {
+    return { consulta: false, desativar: true };
+  }
+
+  return { consulta: true, desativar: false };
 }
 
 export async function GET(req: NextRequest) {
@@ -32,8 +53,6 @@ export async function GET(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  const exec = Math.floor(Date.now() / 120000);
-
   const { data: cobrancas, error } = await supabase
     .from("cobrancas")
     .select("id, url, status, end_to_end_id, valor, horario_pagamento, pagador_nome, pagador_documento, polling_inicio, created_at, tipo, polling_ativo")
@@ -45,15 +64,24 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false, erro: error.message }, { status: 500 });
   }
 
-  const stats = { total: cobrancas?.length || 0, consultadas: 0, capturado_e2e: 0, desativadas: 0, erros: 0 };
+  const stats = {
+    total: cobrancas?.length || 0,
+    consultadas: 0,
+    capturado_e2e: 0,
+    desativadas: 0,
+    erros: 0,
+  };
 
   for (const c of cobrancas || []) {
-    if (expirou(c)) {
+    const decisao = deveConsultar(c);
+
+    if (decisao.desativar) {
       await supabase.from("cobrancas").update({ polling_ativo: false }).eq("id", c.id);
       stats.desativadas++;
       continue;
     }
-    if (!deveConsultar(c, exec)) continue;
+
+    if (!decisao.consulta) continue;
     if (!c.url) continue;
 
     stats.consultadas++;
@@ -84,7 +112,8 @@ export async function GET(req: NextRequest) {
 
       if (mudou) updates.mudanca_nao_vista = true;
 
-      if (result.status === "REMOVIDA_PERMANENTE" && e2eFinal) {
+      // Se virou status final, desativa polling
+      if (result.status && STATUS_FINAIS.has(result.status)) {
         updates.polling_ativo = false;
         stats.desativadas++;
       }
@@ -106,5 +135,5 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, exec, stats, timestamp: new Date().toISOString() });
+  return NextResponse.json({ ok: true, stats, timestamp: new Date().toISOString() });
 }
