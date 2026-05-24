@@ -1,5 +1,5 @@
 // Consulta o endpoint do PSP e extrai status da cobrança PIX
-// Interpreta corretamente HTTP 200, 404, 410, 401/403
+// Interpreta HTTP 200, 404, 410, 401/403, timeouts e firewalls
 
 export type ConsultaResult = {
   ok: boolean;
@@ -59,21 +59,16 @@ export async function consultarPix(url: string, timeoutMs = 8000): Promise<Consu
 
     clearTimeout(timer);
 
-    // Interpretar códigos HTTP que NÃO são 200
     if (!res.ok) {
-      // 404 = cobrança nunca existiu
       if (res.status === 404) {
-        return { ok: true, httpStatus: 404, status: "NAO_ENCONTRADA", erro: null as any };
+        return { ok: true, httpStatus: 404, status: "NAO_ENCONTRADA" };
       }
-      // 410 = cobrança foi deletada permanentemente pelo PSP
       if (res.status === 410) {
-        return { ok: true, httpStatus: 410, status: "REMOVIDA_PERMANENTE", erro: null as any };
+        return { ok: true, httpStatus: 410, status: "REMOVIDA_PERMANENTE" };
       }
-      // 401/403 = precisa de autenticação (PSP fechado)
       if (res.status === 401 || res.status === 403) {
-        return { ok: true, httpStatus: res.status, status: "AUTH_NECESSARIA", erro: null as any };
+        return { ok: true, httpStatus: res.status, status: "PSP_FECHADO" };
       }
-      // Outros
       return { ok: false, httpStatus: res.status, erro: "HTTP " + res.status };
     }
 
@@ -107,7 +102,15 @@ export async function consultarPix(url: string, timeoutMs = 8000): Promise<Consu
     }
   } catch (e: any) {
     clearTimeout(timer);
-    if (e.name === "AbortError") return { ok: false, erro: "Timeout na consulta" };
-    return { ok: false, erro: e.message || String(e) };
+    // Timeout = PSP inacessivel (firewall, allowlist, etc)
+    if (e.name === "AbortError") {
+      return { ok: true, status: "PSP_INACESSIVEL", erro: "Timeout - PSP bloqueia consulta publica" };
+    }
+    // Erro de DNS/rede
+    const msg = e.message || String(e);
+    if (msg.includes("ENOTFOUND") || msg.includes("ECONNREFUSED") || msg.includes("fetch failed")) {
+      return { ok: true, status: "PSP_INACESSIVEL", erro: msg };
+    }
+    return { ok: false, erro: msg };
   }
 }

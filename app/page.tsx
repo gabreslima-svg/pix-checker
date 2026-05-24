@@ -42,6 +42,8 @@ const STATUS_LABELS: { [k: string]: string } = {
   REMOVIDA_PERMANENTE: "410 / removida permanentemente",
   NAO_ENCONTRADA: "404 / nao encontrada",
   AUTH_NECESSARIA: "auth necessaria",
+  PSP_FECHADO: "PSP fechado (401/403)",
+  PSP_INACESSIVEL: "PSP bloqueia consulta",
 };
 
 function extrairBrCodes(input: string): string[] {
