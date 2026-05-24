@@ -51,6 +51,30 @@ export default function Home() {
 
   useEffect(() => { carregar(); }, []);
 
+  async function consultarPorId(id: string, url: string) {
+    try {
+      const res = await fetch("/api/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
+      await supabase.from("cobrancas").update({
+        status: data.status || null,
+        valor: data.valor || null,
+        end_to_end_id: data.endToEndId || null,
+        horario_pagamento: data.horario || null,
+        ultima_checagem: new Date().toISOString(),
+        erro: data.ok ? null : data.erro || "Erro desconhecido",
+      }).eq("id", id);
+    } catch (e: any) {
+      await supabase.from("cobrancas").update({
+        ultima_checagem: new Date().toISOString(),
+        erro: e?.message || "Erro na chamada",
+      }).eq("id", id);
+    }
+  }
+
   async function adicionar() {
     if (!input.trim()) return;
     setLoading(true);
@@ -58,6 +82,7 @@ export default function Home() {
 
     const linhas = input.split(/[\n\r]+/).map((l) => l.trim()).filter(Boolean);
     let dinamicos = 0, estaticos = 0, invalidos = 0;
+    const dinamicosCriados: { id: string; url: string }[] = [];
 
     for (const linha of linhas) {
       const parsed = parseBrCode(linha);
@@ -84,19 +109,37 @@ export default function Home() {
       }
 
       dinamicos++;
-      await supabase.from("cobrancas").insert({
+      const { data } = await supabase.from("cobrancas").insert({
         brcode: linha,
         tipo: "dinamico",
         url: parsed.url,
         psp: parsed.psp,
         merchant_name: parsed.merchantName,
         txid: parsed.txid,
-      });
+      }).select("id").single();
+
+      if (data?.id && parsed.url) {
+        dinamicosCriados.push({ id: data.id, url: parsed.url });
+      }
     }
 
-    setMsg(linhas.length + " adicionado(s): " + dinamicos + " dinamico(s), " + estaticos + " estatico(s), " + invalidos + " invalido(s)");
+    setMsg(
+      linhas.length + " adicionado(s): " + dinamicos + " dinamico(s), " + estaticos + " estatico(s), " + invalidos + " invalido(s)"
+    );
     setInput("");
     await carregar();
+
+    // Consulta automatica dos dinamicos recem-criados
+    if (dinamicosCriados.length > 0) {
+      for (let i = 0; i < dinamicosCriados.length; i++) {
+        const item = dinamicosCriados[i];
+        setMsg("consultando " + (i + 1) + " de " + dinamicosCriados.length + "...");
+        await consultarPorId(item.id, item.url);
+      }
+      await carregar();
+      setMsg(linhas.length + " adicionado(s) e " + dinamicosCriados.length + " consultado(s)");
+    }
+
     setLoading(false);
   }
 
@@ -104,20 +147,7 @@ export default function Home() {
     if (c.tipo !== "dinamico" || !c.url) return;
     setChecagemAtiva(c.id);
     try {
-      const res = await fetch("/api/check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: c.url }),
-      });
-      const data = await res.json();
-      await supabase.from("cobrancas").update({
-        status: data.status || null,
-        valor: data.valor || null,
-        end_to_end_id: data.endToEndId || null,
-        horario_pagamento: data.horario || null,
-        ultima_checagem: new Date().toISOString(),
-        erro: data.ok ? null : data.erro || "Erro desconhecido",
-      }).eq("id", c.id);
+      await consultarPorId(c.id, c.url);
       await carregar();
     } finally {
       setChecagemAtiva(null);
@@ -127,9 +157,13 @@ export default function Home() {
   async function verificarTodas() {
     const aVerificar = cobrancas.filter((c) => c.tipo === "dinamico" && c.url);
     setLoading(true);
-    for (const c of aVerificar) {
-      await verificarUma(c);
+    for (let i = 0; i < aVerificar.length; i++) {
+      const c = aVerificar[i];
+      setMsg("re-consultando " + (i + 1) + " de " + aVerificar.length + "...");
+      await consultarPorId(c.id, c.url!);
     }
+    setMsg(aVerificar.length + " consultada(s)");
+    await carregar();
     setLoading(false);
   }
 
@@ -138,7 +172,6 @@ export default function Home() {
     await carregar();
   }
 
-  // Ordenação: ultima_checagem desc (mais recente em cima); nao consultados no fim
   const ordenadas = [...cobrancas].sort((a, b) => {
     const aT = a.ultima_checagem ? new Date(a.ultima_checagem).getTime() : 0;
     const bT = b.ultima_checagem ? new Date(b.ultima_checagem).getTime() : 0;
@@ -150,7 +183,6 @@ export default function Home() {
     return bT - aT;
   });
 
-  // Filtro por status
   const exibidas = filtroStatus === "todos"
     ? ordenadas
     : filtroStatus === "nao_consultados"
@@ -193,8 +225,8 @@ export default function Home() {
 
         <section style={styles.card}>
           <div style={styles.cardHeader}>
-            <span style={styles.cardLabel}>01 · adicionar BR Codes</span>
-            <span style={styles.cardHelp}>um por linha</span>
+            <span style={styles.cardLabel}>01 · adicionar e consultar BR Codes</span>
+            <span style={styles.cardHelp}>um por linha · consulta automatica</span>
           </div>
           <textarea
             value={input}
@@ -205,7 +237,7 @@ export default function Home() {
           />
           <div style={styles.actions}>
             <button onClick={adicionar} disabled={loading || !input.trim()} style={{ ...styles.btn, ...styles.btnPrimary }}>
-              {loading ? "processando..." : "adicionar e classificar"}
+              {loading ? "processando..." : "adicionar e consultar"}
             </button>
             {msg && <span style={styles.msg}>{msg}</span>}
           </div>
@@ -213,7 +245,7 @@ export default function Home() {
 
         <section style={styles.card}>
           <div style={styles.cardHeader}>
-            <span style={styles.cardLabel}>02 · consultar status</span>
+            <span style={styles.cardLabel}>02 · lista de cobrancas</span>
             <div style={styles.cardActions}>
               <select value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)} style={styles.select}>
                 <option value="todos">todos os status</option>
@@ -228,7 +260,7 @@ export default function Home() {
                 <option value="estaticos">apenas estaticos</option>
               </select>
               <button onClick={verificarTodas} disabled={loading || totais.dinamicas === 0} style={{ ...styles.btn, ...styles.btnSecondary }}>
-                verificar todas
+                re-consultar todas
               </button>
             </div>
           </div>
@@ -280,7 +312,7 @@ function CobrancaRow({ c, verificando, onVerificar, onRemover }: { c: Cobranca; 
     c.status === "ATIVA" ? "var(--yellow)" :
     c.status && c.status.startsWith("REMOVIDA") ? "var(--red)" :
     c.status === "NAO_ENCONTRADA" ? "var(--text-faint)" :
-    c.status === "AUTH_NECESSARIA" ? "var(--orange, #ff9b3d)" :
+    c.status === "AUTH_NECESSARIA" ? "#ff9b3d" :
     "var(--text-faint)";
 
   const tipoStyle =
