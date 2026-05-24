@@ -1,5 +1,4 @@
 // Consulta o endpoint do PSP e extrai status da cobrança PIX
-// Interpreta HTTP 200, 404, 410, 401/403, timeouts e firewalls
 
 export type ConsultaResult = {
   ok: boolean;
@@ -7,6 +6,8 @@ export type ConsultaResult = {
   valor?: string;
   horario?: string;
   endToEndId?: string;
+  pagadorNome?: string;
+  pagadorDocumento?: string;
   expiracao?: number;
   raw?: any;
   erro?: string;
@@ -33,11 +34,27 @@ function extractFromPayload(payload: any): Partial<ConsultaResult> {
     out.expiracao = payload.calendario.expiracao;
   }
 
+  // Dados do pagador podem vir em devedor (na cobranca ATIVA) ou pix[].pagador (na CONCLUIDA)
+  if (payload?.devedor) {
+    out.pagadorNome = payload.devedor.nome;
+    out.pagadorDocumento = payload.devedor.cpf || payload.devedor.cnpj;
+  }
+
   if (Array.isArray(payload.pix) && payload.pix.length > 0) {
     const ultimo = payload.pix[payload.pix.length - 1];
     out.endToEndId = ultimo.endToEndId;
     out.horario = ultimo.horario;
     if (!out.valor && ultimo.valor) out.valor = ultimo.valor;
+
+    // Algumas PSPs retornam dados do pagador dentro do pix[]
+    if (ultimo.pagador) {
+      out.pagadorNome = out.pagadorNome || ultimo.pagador.nome;
+      out.pagadorDocumento = out.pagadorDocumento || ultimo.pagador.cpf || ultimo.pagador.cnpj;
+    }
+    // Variantes nao-padrao
+    if (ultimo.infoPagador && typeof ultimo.infoPagador === "string") {
+      out.pagadorNome = out.pagadorNome || ultimo.infoPagador;
+    }
   }
 
   return out;
@@ -102,11 +119,9 @@ export async function consultarPix(url: string, timeoutMs = 8000): Promise<Consu
     }
   } catch (e: any) {
     clearTimeout(timer);
-    // Timeout = PSP inacessivel (firewall, allowlist, etc)
     if (e.name === "AbortError") {
       return { ok: true, status: "PSP_INACESSIVEL", erro: "Timeout - PSP bloqueia consulta publica" };
     }
-    // Erro de DNS/rede
     const msg = e.message || String(e);
     if (msg.includes("ENOTFOUND") || msg.includes("ECONNREFUSED") || msg.includes("fetch failed")) {
       return { ok: true, status: "PSP_INACESSIVEL", erro: msg };

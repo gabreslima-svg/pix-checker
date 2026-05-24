@@ -16,6 +16,8 @@ type Cobranca = {
   valor: string | null;
   end_to_end_id: string | null;
   horario_pagamento: string | null;
+  pagador_nome: string | null;
+  pagador_documento: string | null;
   ultima_checagem: string | null;
   erro: string | null;
   observacao: string | null;
@@ -30,6 +32,8 @@ type HistoricoItem = {
   valor: string | null;
   end_to_end_id: string | null;
   horario_pagamento: string | null;
+  pagador_nome: string | null;
+  pagador_documento: string | null;
   erro: string | null;
   consultado_em: string;
 };
@@ -63,6 +67,7 @@ export default function Home() {
   const [msg, setMsg] = useState("");
   const [historicoAberto, setHistoricoAberto] = useState<Cobranca | null>(null);
   const [historico, setHistorico] = useState<HistoricoItem[]>([]);
+  const [copiado, setCopiado] = useState<string | null>(null);
 
   async function carregar() {
     const { data, error } = await supabase
@@ -75,9 +80,16 @@ export default function Home() {
 
   useEffect(() => { carregar(); }, []);
 
+  async function copiarTexto(texto: string, identificador: string) {
+    try {
+      await navigator.clipboard.writeText(texto);
+      setCopiado(identificador);
+      setTimeout(() => setCopiado(null), 1500);
+    } catch {}
+  }
+
   async function consultarPorId(id: string, url: string) {
     try {
-      // Busca status atual antes de consultar
       const { data: antes } = await supabase
         .from("cobrancas")
         .select("status, valor, end_to_end_id, horario_pagamento")
@@ -95,9 +107,10 @@ export default function Home() {
       const novoValor = data.valor || null;
       const novoE2e = data.endToEndId || null;
       const novoHorario = data.horario || null;
+      const novoNome = data.pagadorNome || null;
+      const novoDoc = data.pagadorDocumento || null;
       const novoErro = data.ok ? null : data.erro || "Erro desconhecido";
 
-      // Detecta se mudou alguma coisa significativa
       const mudou = !antes || antes.status !== novoStatus
         || antes.valor !== novoValor
         || antes.end_to_end_id !== novoE2e
@@ -108,18 +121,21 @@ export default function Home() {
         valor: novoValor,
         end_to_end_id: novoE2e,
         horario_pagamento: novoHorario,
+        pagador_nome: novoNome,
+        pagador_documento: novoDoc,
         ultima_checagem: new Date().toISOString(),
         erro: novoErro,
         mudanca_nao_vista: mudou ? true : undefined,
       }).eq("id", id);
 
-      // Salva no historico
       await supabase.from("cobrancas_historico").insert({
         cobranca_id: id,
         status: novoStatus,
         valor: novoValor,
         end_to_end_id: novoE2e,
         horario_pagamento: novoHorario,
+        pagador_nome: novoNome,
+        pagador_documento: novoDoc,
         erro: novoErro,
       });
     } catch (e: any) {
@@ -258,7 +274,6 @@ export default function Home() {
       .order("consultado_em", { ascending: false });
     setHistorico((data as HistoricoItem[]) || []);
 
-    // Marca como visto
     if (c.mudanca_nao_vista) {
       await supabase.from("cobrancas").update({ mudanca_nao_vista: false }).eq("id", c.id);
       await carregar();
@@ -360,7 +375,8 @@ export default function Home() {
                 <option value="REMOVIDA_PELO_USUARIO_RECEBEDOR">removida pelo recebedor</option>
                 <option value="REMOVIDA_PELO_PSP">removida pelo PSP</option>
                 <option value="NAO_ENCONTRADA">nao encontrada (404)</option>
-                <option value="AUTH_NECESSARIA">auth necessaria</option>
+                <option value="PSP_FECHADO">PSP fechado</option>
+                <option value="PSP_INACESSIVEL">PSP inacessivel</option>
                 <option value="estaticos">apenas estaticos</option>
                 <option value="invalidos">apenas invalidos</option>
               </select>
@@ -385,22 +401,25 @@ export default function Home() {
             <div style={styles.table}>
               <div style={styles.tableHead}>
                 <div style={{ flex: "0 0 28px" }}></div>
-                <div style={{ flex: "0 0 90px" }}>tipo</div>
-                <div style={{ flex: "1 1 160px" }}>PSP</div>
-                <div style={{ flex: "1 1 200px" }}>merchant / txid</div>
-                <div style={{ flex: "0 0 100px" }}>valor</div>
-                <div style={{ flex: "0 0 200px" }}>status</div>
-                <div style={{ flex: "0 0 140px" }}>checagem</div>
-                <div style={{ flex: "0 0 120px" }}>acao</div>
+                <div style={{ flex: "0 0 80px" }}>tipo</div>
+                <div style={{ flex: "1 1 140px" }}>PSP</div>
+                <div style={{ flex: "1 1 160px" }}>merchant / txid</div>
+                <div style={{ flex: "0 0 90px" }}>valor</div>
+                <div style={{ flex: "0 0 180px" }}>status</div>
+                <div style={{ flex: "1 1 220px" }}>E2E / pagador</div>
+                <div style={{ flex: "0 0 110px" }}>checagem</div>
+                <div style={{ flex: "0 0 110px" }}>acao</div>
               </div>
               {exibidas.map((c) => (
                 <CobrancaRow
                   key={c.id}
                   c={c}
                   verificando={checagemAtiva === c.id}
+                  copiado={copiado}
                   onVerificar={() => verificarUma(c)}
                   onRemover={() => remover(c.id)}
                   onHistorico={() => abrirHistorico(c)}
+                  onCopiar={copiarTexto}
                 />
               ))}
             </div>
@@ -412,6 +431,8 @@ export default function Home() {
             cobranca={historicoAberto}
             historico={historico}
             onClose={fecharHistorico}
+            onCopiar={copiarTexto}
+            copiado={copiado}
           />
         )}
 
@@ -432,18 +453,34 @@ function Stat({ label, value, color, dim }: { label: string; value: number; colo
   );
 }
 
+function CopyButton({ texto, identificador, copiado, onCopiar }: {
+  texto: string; identificador: string; copiado: string | null; onCopiar: (t: string, id: string) => void;
+}) {
+  const ativo = copiado === identificador;
+  return (
+    <button
+      onClick={() => onCopiar(texto, identificador)}
+      style={{ ...styles.copyBtn, color: ativo ? "var(--green)" : "var(--text-faint)" }}
+      title="copiar"
+    >
+      {ativo ? "✓" : "⎘"}
+    </button>
+  );
+}
+
 function CobrancaRow({
-  c, verificando, onVerificar, onRemover, onHistorico,
+  c, verificando, copiado, onVerificar, onRemover, onHistorico, onCopiar,
 }: {
-  c: Cobranca; verificando: boolean;
+  c: Cobranca; verificando: boolean; copiado: string | null;
   onVerificar: () => void; onRemover: () => void; onHistorico: () => void;
+  onCopiar: (t: string, id: string) => void;
 }) {
   const statusColor =
     c.status === "CONCLUIDA" ? "var(--green)" :
     c.status === "ATIVA" ? "var(--yellow)" :
     c.status && c.status.startsWith("REMOVIDA") ? "var(--red)" :
     c.status === "NAO_ENCONTRADA" ? "var(--text-faint)" :
-    c.status === "AUTH_NECESSARIA" ? "#ff9b3d" :
+    c.status === "AUTH_NECESSARIA" || c.status === "PSP_FECHADO" || c.status === "PSP_INACESSIVEL" ? "#ff9b3d" :
     "var(--text-faint)";
 
   const tipoStyle =
@@ -456,26 +493,44 @@ function CobrancaRow({
   return (
     <div style={{ ...styles.tableRow, background: c.status === "CONCLUIDA" ? "rgba(46, 230, 141, 0.05)" : undefined }}>
       <div style={{ flex: "0 0 28px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {c.mudanca_nao_vista && <span style={styles.bolinhaAmarela} title="mudou na ultima consulta — clique no olhinho pra ver"></span>}
+        {c.mudanca_nao_vista && <span style={styles.bolinhaAmarela} title="mudou na ultima consulta"></span>}
       </div>
-      <div style={{ flex: "0 0 90px" }}>
+      <div style={{ flex: "0 0 80px" }}>
         <span style={{ ...styles.tipoBadge, background: tipoStyle.bg, color: tipoStyle.fg }}>{c.tipo}</span>
       </div>
-      <div style={{ flex: "1 1 160px", ...styles.cellDim }}>{c.psp || "—"}</div>
-      <div style={{ flex: "1 1 200px", overflow: "hidden" }}>
+      <div style={{ flex: "1 1 140px", ...styles.cellDim }}>{c.psp || "—"}</div>
+      <div style={{ flex: "1 1 160px", overflow: "hidden" }}>
         <div style={styles.cellMain}>{c.merchant_name || "—"}</div>
         <div style={styles.cellSub}>{c.txid || c.erro || "—"}</div>
       </div>
-      <div style={{ flex: "0 0 100px" }}>{c.valor ? "R$ " + c.valor : <span style={styles.cellFaint}>—</span>}</div>
-      <div style={{ flex: "0 0 200px" }}>
+      <div style={{ flex: "0 0 90px" }}>{c.valor ? "R$ " + c.valor : <span style={styles.cellFaint}>—</span>}</div>
+      <div style={{ flex: "0 0 180px" }}>
         {statusLabel ? <span style={{ color: statusColor, fontWeight: 500 }}>{statusLabel}</span> : <span style={styles.cellFaint}>nao consultado</span>}
-        {c.end_to_end_id && <div style={styles.cellTiny}>E2E: {c.end_to_end_id.substring(0, 16)}</div>}
       </div>
-      <div style={{ flex: "0 0 140px", ...styles.cellDim }}>
+      <div style={{ flex: "1 1 220px", overflow: "hidden" }}>
+        {c.end_to_end_id ? (
+          <>
+            <div style={styles.e2eCell}>
+              <code style={styles.e2eCode}>{c.end_to_end_id}</code>
+              <CopyButton texto={c.end_to_end_id} identificador={"e2e-" + c.id} copiado={copiado} onCopiar={onCopiar} />
+            </div>
+            {(c.pagador_nome || c.pagador_documento) && (
+              <div style={styles.pagadorInfo}>
+                {c.pagador_nome && <span>{c.pagador_nome}</span>}
+                {c.pagador_nome && c.pagador_documento && <span> · </span>}
+                {c.pagador_documento && <span>{c.pagador_documento}</span>}
+              </div>
+            )}
+          </>
+        ) : (
+          <span style={styles.cellFaint}>—</span>
+        )}
+      </div>
+      <div style={{ flex: "0 0 110px", ...styles.cellDim, fontSize: 11 }}>
         {c.ultima_checagem ? new Date(c.ultima_checagem).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—"}
       </div>
-      <div style={{ flex: "0 0 120px", display: "flex", gap: 6 }}>
-        <button onClick={onHistorico} style={{ ...styles.btnSmall, ...styles.btnGhost }} title="ver historico">
+      <div style={{ flex: "0 0 110px", display: "flex", gap: 6 }}>
+        <button onClick={onHistorico} style={{ ...styles.btnSmall, ...styles.btnGhost }} title="historico">
           👁
         </button>
         {c.tipo === "dinamico" && (
@@ -490,8 +545,11 @@ function CobrancaRow({
 }
 
 function HistoricoModal({
-  cobranca, historico, onClose,
-}: { cobranca: Cobranca; historico: HistoricoItem[]; onClose: () => void }) {
+  cobranca, historico, onClose, onCopiar, copiado,
+}: {
+  cobranca: Cobranca; historico: HistoricoItem[]; onClose: () => void;
+  onCopiar: (t: string, id: string) => void; copiado: string | null;
+}) {
   return (
     <div style={styles.modalBackdrop} onClick={onClose}>
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -533,7 +591,21 @@ function HistoricoModal({
                       {h.valor && <span style={styles.cellDim}> · R$ {h.valor}</span>}
                     </div>
                     {h.end_to_end_id && (
-                      <div style={styles.timelineE2e}>E2E: {h.end_to_end_id}</div>
+                      <div style={styles.timelineE2eBox}>
+                        <code style={styles.timelineE2e}>E2E: {h.end_to_end_id}</code>
+                        <CopyButton texto={h.end_to_end_id} identificador={"hist-" + h.id} copiado={copiado} onCopiar={onCopiar} />
+                      </div>
+                    )}
+                    {(h.pagador_nome || h.pagador_documento) && (
+                      <div style={styles.timelinePagador}>
+                        pagador: {h.pagador_nome || "—"}
+                        {h.pagador_documento && <span> · {h.pagador_documento}</span>}
+                      </div>
+                    )}
+                    {h.horario_pagamento && (
+                      <div style={styles.timelineExtra}>
+                        pago em: {new Date(h.horario_pagamento).toLocaleString("pt-BR")}
+                      </div>
                     )}
                     {h.erro && <div style={styles.timelineErro}>{h.erro}</div>}
                   </div>
@@ -549,7 +621,7 @@ function HistoricoModal({
 
 const styles: { [k: string]: React.CSSProperties } = {
   main: { minHeight: "100vh", padding: "32px 24px 60px" },
-  container: { maxWidth: 1280, margin: "0 auto" },
+  container: { maxWidth: 1400, margin: "0 auto" },
   header: { display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 24, marginBottom: 40, paddingBottom: 24, borderBottom: "1px solid var(--border)", flexWrap: "wrap" },
   logo: { fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", display: "flex", alignItems: "center", gap: 8 },
   logoDot: { color: "var(--accent)", fontSize: 12 },
@@ -573,6 +645,24 @@ const styles: { [k: string]: React.CSSProperties } = {
   btnSecondary: { background: "var(--bg-elevated)", color: "var(--text)", border: "1px solid var(--border-strong)" },
   btnGhost: { background: "transparent", color: "var(--text-faint)", border: "1px solid var(--border)" },
   btnSmall: { padding: "6px 10px", fontSize: 12, borderRadius: 4, fontWeight: 600 },
+  copyBtn: {
+    background: "transparent", border: "none", padding: "2px 6px",
+    fontSize: 14, cursor: "pointer", borderRadius: 3,
+    transition: "all 0.15s",
+  },
+  e2eCell: {
+    display: "flex", alignItems: "center", gap: 4,
+  },
+  e2eCode: {
+    fontFamily: "var(--mono)", fontSize: 11, color: "var(--green)",
+    background: "rgba(46, 230, 141, 0.08)", padding: "3px 6px",
+    borderRadius: 3, whiteSpace: "nowrap", overflow: "hidden",
+    textOverflow: "ellipsis", maxWidth: 240, flex: 1,
+  },
+  pagadorInfo: {
+    fontSize: 10, color: "var(--text-faint)", marginTop: 3,
+    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+  },
   msg: { fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 14, color: "var(--text-dim)" },
   empty: { padding: "60px 20px", textAlign: "center", border: "1px dashed var(--border)", borderRadius: 6 },
   emptyText: { color: "var(--text-faint)", fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 16 },
@@ -582,7 +672,6 @@ const styles: { [k: string]: React.CSSProperties } = {
   tipoBadge: { display: "inline-block", padding: "3px 8px", borderRadius: 3, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 },
   cellMain: { color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
   cellSub: { color: "var(--text-faint)", fontSize: 10, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-  cellTiny: { color: "var(--text-faint)", fontSize: 9, marginTop: 3 },
   cellDim: { color: "var(--text-dim)" },
   cellFaint: { color: "var(--text-faint)" },
   footer: { marginTop: 40, paddingTop: 20, borderTop: "1px solid var(--border)", textAlign: "center", color: "var(--text-faint)", fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 13 },
@@ -608,7 +697,7 @@ const styles: { [k: string]: React.CSSProperties } = {
   modalSubtitle: { fontSize: 16, color: "var(--text)", marginTop: 6 },
   modalClose: {
     background: "transparent", color: "var(--text-faint)", fontSize: 24,
-    width: 32, height: 32, borderRadius: 4,
+    width: 32, height: 32, borderRadius: 4, border: "none", cursor: "pointer",
   },
   timeline: { display: "flex", flexDirection: "column", gap: 0, position: "relative" },
   timelineItem: { display: "flex", gap: 16, padding: "12px 0", borderLeft: "1px solid var(--border)", marginLeft: 6, paddingLeft: 24, position: "relative" },
@@ -621,6 +710,12 @@ const styles: { [k: string]: React.CSSProperties } = {
   timelineBadge: { color: "var(--accent)", fontWeight: 700, marginLeft: 6 },
   timelineMudou: { color: "var(--yellow)", fontStyle: "italic" },
   timelineStatus: { fontSize: 13, marginTop: 4 },
-  timelineE2e: { fontSize: 10, color: "var(--text-faint)", marginTop: 4, fontFamily: "var(--mono)" },
+  timelineE2eBox: { marginTop: 6, display: "flex", alignItems: "center", gap: 6 },
+  timelineE2e: {
+    fontSize: 11, color: "var(--green)", background: "rgba(46, 230, 141, 0.08)",
+    padding: "4px 8px", borderRadius: 4, fontFamily: "var(--mono)",
+  },
+  timelinePagador: { fontSize: 11, color: "var(--text-dim)", marginTop: 4 },
+  timelineExtra: { fontSize: 11, color: "var(--text-dim)", marginTop: 2 },
   timelineErro: { fontSize: 11, color: "var(--red)", marginTop: 4 },
 };
