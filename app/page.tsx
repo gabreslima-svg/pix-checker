@@ -22,10 +22,20 @@ type Cobranca = {
   created_at: string;
 };
 
+const STATUS_LABELS: { [k: string]: string } = {
+  ATIVA: "ATIVA / pendente",
+  CONCLUIDA: "CONCLUIDA / paga",
+  REMOVIDA_PELO_USUARIO_RECEBEDOR: "removida pelo recebedor",
+  REMOVIDA_PELO_PSP: "removida pelo PSP",
+  REMOVIDA_PERMANENTE: "410 / removida permanentemente",
+  NAO_ENCONTRADA: "404 / nao encontrada",
+  AUTH_NECESSARIA: "auth necessaria",
+};
+
 export default function Home() {
   const [input, setInput] = useState("");
   const [cobrancas, setCobrancas] = useState<Cobranca[]>([]);
-  const [filtroPagas, setFiltroPagas] = useState(false);
+  const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [loading, setLoading] = useState(false);
   const [checagemAtiva, setChecagemAtiva] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
@@ -128,7 +138,26 @@ export default function Home() {
     await carregar();
   }
 
-  const exibidas = filtroPagas ? cobrancas.filter((c) => c.status === "CONCLUIDA") : cobrancas;
+  // Ordenação: ultima_checagem desc (mais recente em cima); nao consultados no fim
+  const ordenadas = [...cobrancas].sort((a, b) => {
+    const aT = a.ultima_checagem ? new Date(a.ultima_checagem).getTime() : 0;
+    const bT = b.ultima_checagem ? new Date(b.ultima_checagem).getTime() : 0;
+    if (aT === 0 && bT === 0) {
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
+    if (aT === 0) return 1;
+    if (bT === 0) return -1;
+    return bT - aT;
+  });
+
+  // Filtro por status
+  const exibidas = filtroStatus === "todos"
+    ? ordenadas
+    : filtroStatus === "nao_consultados"
+    ? ordenadas.filter((c) => !c.status && c.tipo === "dinamico")
+    : filtroStatus === "estaticos"
+    ? ordenadas.filter((c) => c.tipo === "estatico")
+    : ordenadas.filter((c) => c.status === filtroStatus);
 
   const totais = {
     total: cobrancas.length,
@@ -136,6 +165,7 @@ export default function Home() {
     estaticas: cobrancas.filter((c) => c.tipo === "estatico").length,
     pagas: cobrancas.filter((c) => c.status === "CONCLUIDA").length,
     pendentes: cobrancas.filter((c) => c.status === "ATIVA").length,
+    removidas: cobrancas.filter((c) => c.status && c.status.startsWith("REMOVIDA")).length,
   };
 
   return (
@@ -157,6 +187,7 @@ export default function Home() {
             <Stat label="estaticas" value={totais.estaticas} dim />
             <Stat label="pendentes" value={totais.pendentes} color="var(--yellow)" />
             <Stat label="pagas" value={totais.pagas} color="var(--green)" />
+            <Stat label="removidas" value={totais.removidas} color="var(--red)" />
           </div>
         </header>
 
@@ -184,10 +215,18 @@ export default function Home() {
           <div style={styles.cardHeader}>
             <span style={styles.cardLabel}>02 · consultar status</span>
             <div style={styles.cardActions}>
-              <label style={styles.checkLabel}>
-                <input type="checkbox" checked={filtroPagas} onChange={(e) => setFiltroPagas(e.target.checked)} />
-                so pagas (CONCLUIDA)
-              </label>
+              <select value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)} style={styles.select}>
+                <option value="todos">todos os status</option>
+                <option value="nao_consultados">nao consultados</option>
+                <option value="ATIVA">ATIVA / pendente</option>
+                <option value="CONCLUIDA">CONCLUIDA / paga</option>
+                <option value="REMOVIDA_PERMANENTE">removida permanente (410)</option>
+                <option value="REMOVIDA_PELO_USUARIO_RECEBEDOR">removida pelo recebedor</option>
+                <option value="REMOVIDA_PELO_PSP">removida pelo PSP</option>
+                <option value="NAO_ENCONTRADA">nao encontrada (404)</option>
+                <option value="AUTH_NECESSARIA">auth necessaria</option>
+                <option value="estaticos">apenas estaticos</option>
+              </select>
               <button onClick={verificarTodas} disabled={loading || totais.dinamicas === 0} style={{ ...styles.btn, ...styles.btnSecondary }}>
                 verificar todas
               </button>
@@ -197,7 +236,7 @@ export default function Home() {
           {exibidas.length === 0 ? (
             <div style={styles.empty}>
               <span style={styles.emptyText}>
-                {cobrancas.length === 0 ? "nenhuma cobranca ainda" : "nenhuma cobranca nos filtros"}
+                {cobrancas.length === 0 ? "nenhuma cobranca ainda" : "nenhuma cobranca nesse filtro"}
               </span>
             </div>
           ) : (
@@ -207,7 +246,7 @@ export default function Home() {
                 <div style={{ flex: "1 1 160px" }}>PSP</div>
                 <div style={{ flex: "1 1 200px" }}>merchant / txid</div>
                 <div style={{ flex: "0 0 100px" }}>valor</div>
-                <div style={{ flex: "0 0 140px" }}>status</div>
+                <div style={{ flex: "0 0 200px" }}>status</div>
                 <div style={{ flex: "0 0 140px" }}>checagem</div>
                 <div style={{ flex: "0 0 90px" }}>acao</div>
               </div>
@@ -239,13 +278,17 @@ function CobrancaRow({ c, verificando, onVerificar, onRemover }: { c: Cobranca; 
   const statusColor =
     c.status === "CONCLUIDA" ? "var(--green)" :
     c.status === "ATIVA" ? "var(--yellow)" :
-    c.status?.includes("REMOVIDA") ? "var(--red)" :
+    c.status && c.status.startsWith("REMOVIDA") ? "var(--red)" :
+    c.status === "NAO_ENCONTRADA" ? "var(--text-faint)" :
+    c.status === "AUTH_NECESSARIA" ? "var(--orange, #ff9b3d)" :
     "var(--text-faint)";
 
   const tipoStyle =
     c.tipo === "dinamico" ? { bg: "rgba(46, 230, 141, 0.1)", fg: "var(--green)" } :
     c.tipo === "estatico" ? { bg: "rgba(245, 197, 66, 0.1)", fg: "var(--yellow)" } :
     { bg: "rgba(255, 90, 90, 0.1)", fg: "var(--red)" };
+
+  const statusLabel = c.status ? (STATUS_LABELS[c.status] || c.status) : null;
 
   return (
     <div style={{ ...styles.tableRow, background: c.status === "CONCLUIDA" ? "rgba(46, 230, 141, 0.05)" : undefined }}>
@@ -258,8 +301,8 @@ function CobrancaRow({ c, verificando, onVerificar, onRemover }: { c: Cobranca; 
         <div style={styles.cellSub}>{c.txid || c.erro || "—"}</div>
       </div>
       <div style={{ flex: "0 0 100px" }}>{c.valor ? "R$ " + c.valor : <span style={styles.cellFaint}>—</span>}</div>
-      <div style={{ flex: "0 0 140px" }}>
-        {c.status ? <span style={{ color: statusColor, fontWeight: 500 }}>{c.status}</span> : <span style={styles.cellFaint}>nao consultado</span>}
+      <div style={{ flex: "0 0 200px" }}>
+        {statusLabel ? <span style={{ color: statusColor, fontWeight: 500 }}>{statusLabel}</span> : <span style={styles.cellFaint}>nao consultado</span>}
         {c.end_to_end_id && <div style={styles.cellTiny}>E2E: {c.end_to_end_id.substring(0, 16)}</div>}
       </div>
       <div style={{ flex: "0 0 140px", ...styles.cellDim }}>
@@ -294,8 +337,8 @@ const styles: { [k: string]: React.CSSProperties } = {
   cardHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 },
   cardLabel: { fontSize: 11, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.15em", fontWeight: 500 },
   cardHelp: { fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 14, color: "var(--text-faint)" },
-  cardActions: { display: "flex", gap: 16, alignItems: "center" },
-  checkLabel: { fontSize: 12, color: "var(--text-dim)", display: "flex", alignItems: "center", gap: 6, cursor: "pointer" },
+  cardActions: { display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" },
+  select: { background: "var(--bg-elevated)", color: "var(--text)", border: "1px solid var(--border-strong)", borderRadius: 6, padding: "8px 12px", fontSize: 12, fontFamily: "var(--mono)", cursor: "pointer", outline: "none" },
   textarea: { width: "100%", background: "var(--bg)", border: "1px solid var(--border-strong)", borderRadius: 6, padding: 14, color: "var(--text)", fontSize: 12, fontFamily: "var(--mono)", resize: "vertical", minHeight: 100, outline: "none" },
   actions: { display: "flex", gap: 16, alignItems: "center", marginTop: 12, flexWrap: "wrap" },
   btn: { padding: "10px 18px", fontSize: 12, fontWeight: 500, borderRadius: 6, textTransform: "lowercase", letterSpacing: "0.02em", transition: "all 0.15s" },
