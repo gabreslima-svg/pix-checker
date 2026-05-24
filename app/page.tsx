@@ -81,14 +81,31 @@ export default function Home() {
     setMsg("");
 
     const linhas = input.split(/[\n\r]+/).map((l) => l.trim()).filter(Boolean);
-    let dinamicos = 0, estaticos = 0, invalidos = 0;
-    const dinamicosCriados: { id: string; url: string }[] = [];
+
+    let dinamicosNovos = 0, estaticosNovos = 0, invalidos = 0, duplicados = 0;
+    const idsParaConsultar: { id: string; url: string }[] = [];
 
     for (const linha of linhas) {
       const parsed = parseBrCode(linha);
 
+      // Verifica duplicado pelo brcode exato
+      const { data: existente } = await supabase
+        .from("cobrancas")
+        .select("id, tipo, url")
+        .eq("brcode", linha)
+        .maybeSingle();
+
+      if (existente) {
+        duplicados++;
+        // Se for dinamico, ja agenda re-consulta
+        if (existente.tipo === "dinamico" && existente.url) {
+          idsParaConsultar.push({ id: existente.id, url: existente.url });
+        }
+        continue;
+      }
+
       if (parsed.tipo === "estatico") {
-        estaticos++;
+        estaticosNovos++;
         await supabase.from("cobrancas").insert({
           brcode: linha,
           tipo: "estatico",
@@ -108,7 +125,7 @@ export default function Home() {
         continue;
       }
 
-      dinamicos++;
+      dinamicosNovos++;
       const { data } = await supabase.from("cobrancas").insert({
         brcode: linha,
         tipo: "dinamico",
@@ -119,25 +136,33 @@ export default function Home() {
       }).select("id").single();
 
       if (data?.id && parsed.url) {
-        dinamicosCriados.push({ id: data.id, url: parsed.url });
+        idsParaConsultar.push({ id: data.id, url: parsed.url });
       }
     }
 
-    setMsg(
-      linhas.length + " adicionado(s): " + dinamicos + " dinamico(s), " + estaticos + " estatico(s), " + invalidos + " invalido(s)"
-    );
+    const partes: string[] = [];
+    const novos = dinamicosNovos + estaticosNovos;
+    if (novos > 0) partes.push(novos + " novo(s)");
+    if (duplicados > 0) partes.push(duplicados + " duplicado(s) re-consultado(s)");
+    if (invalidos > 0) partes.push(invalidos + " invalido(s)");
+
+    setMsg(linhas.length + " processado(s): " + (partes.join(", ") || "nada"));
     setInput("");
     await carregar();
 
-    // Consulta automatica dos dinamicos recem-criados
-    if (dinamicosCriados.length > 0) {
-      for (let i = 0; i < dinamicosCriados.length; i++) {
-        const item = dinamicosCriados[i];
-        setMsg("consultando " + (i + 1) + " de " + dinamicosCriados.length + "...");
+    // Consulta os dinamicos (novos + duplicados re-consultados)
+    if (idsParaConsultar.length > 0) {
+      for (let i = 0; i < idsParaConsultar.length; i++) {
+        const item = idsParaConsultar[i];
+        setMsg("consultando " + (i + 1) + " de " + idsParaConsultar.length + "...");
         await consultarPorId(item.id, item.url);
       }
       await carregar();
-      setMsg(linhas.length + " adicionado(s) e " + dinamicosCriados.length + " consultado(s)");
+      const final: string[] = [];
+      if (novos > 0) final.push(novos + " novo(s)");
+      if (duplicados > 0) final.push(duplicados + " duplicado(s) atualizado(s)");
+      if (invalidos > 0) final.push(invalidos + " invalido(s)");
+      setMsg(linhas.length + " processado(s) · " + final.join(", "));
     }
 
     setLoading(false);
@@ -226,7 +251,7 @@ export default function Home() {
         <section style={styles.card}>
           <div style={styles.cardHeader}>
             <span style={styles.cardLabel}>01 · adicionar e consultar BR Codes</span>
-            <span style={styles.cardHelp}>um por linha · consulta automatica</span>
+            <span style={styles.cardHelp}>um por linha · duplicados sao re-consultados</span>
           </div>
           <textarea
             value={input}
