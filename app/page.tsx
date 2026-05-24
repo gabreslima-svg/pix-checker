@@ -58,6 +58,12 @@ function extrairBrCodes(input: string): string[] {
   return input.split(/[\n\r]+/).map((l) => l.trim()).filter(Boolean);
 }
 
+// Determina o status efetivo: se tem E2E em algum momento, foi paga
+function statusEfetivo(c: Cobranca): string | null {
+  if (c.end_to_end_id) return "CONCLUIDA";
+  return c.status;
+}
+
 export default function Home() {
   const [input, setInput] = useState("");
   const [cobrancas, setCobrancas] = useState<Cobranca[]>([]);
@@ -92,7 +98,7 @@ export default function Home() {
     try {
       const { data: antes } = await supabase
         .from("cobrancas")
-        .select("status, valor, end_to_end_id, horario_pagamento")
+        .select("status, valor, end_to_end_id, horario_pagamento, pagador_nome, pagador_documento")
         .eq("id", id)
         .single();
 
@@ -105,37 +111,41 @@ export default function Home() {
 
       const novoStatus = data.status || null;
       const novoValor = data.valor || null;
-      const novoE2e = data.endToEndId || null;
-      const novoHorario = data.horario || null;
-      const novoNome = data.pagadorNome || null;
-      const novoDoc = data.pagadorDocumento || null;
       const novoErro = data.ok ? null : data.erro || "Erro desconhecido";
 
+      // PRINCIPIO: dados de pagamento sao IMUTAVEIS uma vez capturados
+      // Se em algum momento ja tivemos E2E/horario/pagador, mantemos para sempre
+      const e2eFinal = data.endToEndId || antes?.end_to_end_id || null;
+      const horarioFinal = data.horario || antes?.horario_pagamento || null;
+      const nomeFinal = data.pagadorNome || antes?.pagador_nome || null;
+      const docFinal = data.pagadorDocumento || antes?.pagador_documento || null;
+      const valorFinal = novoValor || antes?.valor || null;
+
       const mudou = !antes || antes.status !== novoStatus
-        || antes.valor !== novoValor
-        || antes.end_to_end_id !== novoE2e
-        || antes.horario_pagamento !== novoHorario;
+        || antes.end_to_end_id !== e2eFinal
+        || antes.horario_pagamento !== horarioFinal;
 
       await supabase.from("cobrancas").update({
         status: novoStatus,
-        valor: novoValor,
-        end_to_end_id: novoE2e,
-        horario_pagamento: novoHorario,
-        pagador_nome: novoNome,
-        pagador_documento: novoDoc,
+        valor: valorFinal,
+        end_to_end_id: e2eFinal,
+        horario_pagamento: horarioFinal,
+        pagador_nome: nomeFinal,
+        pagador_documento: docFinal,
         ultima_checagem: new Date().toISOString(),
         erro: novoErro,
         mudanca_nao_vista: mudou ? true : undefined,
       }).eq("id", id);
 
+      // Historico guarda exatamente o que o PSP retornou (snapshot fiel)
       await supabase.from("cobrancas_historico").insert({
         cobranca_id: id,
         status: novoStatus,
         valor: novoValor,
-        end_to_end_id: novoE2e,
-        horario_pagamento: novoHorario,
-        pagador_nome: novoNome,
-        pagador_documento: novoDoc,
+        end_to_end_id: data.endToEndId || null,
+        horario_pagamento: data.horario || null,
+        pagador_nome: data.pagadorNome || null,
+        pagador_documento: data.pagadorDocumento || null,
         erro: novoErro,
       });
     } catch (e: any) {
@@ -306,16 +316,19 @@ export default function Home() {
     ? ordenadas.filter((c) => c.tipo === "invalido")
     : filtroStatus === "com_mudanca"
     ? ordenadas.filter((c) => c.mudanca_nao_vista)
-    : ordenadas.filter((c) => c.status === filtroStatus);
+    : ordenadas.filter((c) => statusEfetivo(c) === filtroStatus);
 
   const totais = {
     total: cobrancas.length,
     dinamicas: cobrancas.filter((c) => c.tipo === "dinamico").length,
     estaticas: cobrancas.filter((c) => c.tipo === "estatico").length,
     invalidas: cobrancas.filter((c) => c.tipo === "invalido").length,
-    pagas: cobrancas.filter((c) => c.status === "CONCLUIDA").length,
-    pendentes: cobrancas.filter((c) => c.status === "ATIVA").length,
-    removidas: cobrancas.filter((c) => c.status && c.status.startsWith("REMOVIDA")).length,
+    pagas: cobrancas.filter((c) => statusEfetivo(c) === "CONCLUIDA").length,
+    pendentes: cobrancas.filter((c) => statusEfetivo(c) === "ATIVA").length,
+    removidas: cobrancas.filter((c) => {
+      const s = statusEfetivo(c);
+      return s && s.startsWith("REMOVIDA");
+    }).length,
     comMudanca: cobrancas.filter((c) => c.mudanca_nao_vista).length,
   };
 
@@ -475,12 +488,17 @@ function CobrancaRow({
   onVerificar: () => void; onRemover: () => void; onHistorico: () => void;
   onCopiar: (t: string, id: string) => void;
 }) {
+  const statusEfet = statusEfetivo(c);
+  // statusAtual = o que o PSP devolveu na ultima checagem (raw)
+  const statusAtualPSP = c.status;
+  const mostraDivergencia = c.end_to_end_id && c.status && c.status !== "CONCLUIDA";
+
   const statusColor =
-    c.status === "CONCLUIDA" ? "var(--green)" :
-    c.status === "ATIVA" ? "var(--yellow)" :
-    c.status && c.status.startsWith("REMOVIDA") ? "var(--red)" :
-    c.status === "NAO_ENCONTRADA" ? "var(--text-faint)" :
-    c.status === "AUTH_NECESSARIA" || c.status === "PSP_FECHADO" || c.status === "PSP_INACESSIVEL" ? "#ff9b3d" :
+    statusEfet === "CONCLUIDA" ? "var(--green)" :
+    statusEfet === "ATIVA" ? "var(--yellow)" :
+    statusEfet && statusEfet.startsWith("REMOVIDA") ? "var(--red)" :
+    statusEfet === "NAO_ENCONTRADA" ? "var(--text-faint)" :
+    statusEfet === "AUTH_NECESSARIA" || statusEfet === "PSP_FECHADO" || statusEfet === "PSP_INACESSIVEL" ? "#ff9b3d" :
     "var(--text-faint)";
 
   const tipoStyle =
@@ -488,10 +506,10 @@ function CobrancaRow({
     c.tipo === "estatico" ? { bg: "rgba(245, 197, 66, 0.1)", fg: "var(--yellow)" } :
     { bg: "rgba(255, 90, 90, 0.1)", fg: "var(--red)" };
 
-  const statusLabel = c.status ? (STATUS_LABELS[c.status] || c.status) : null;
+  const statusLabel = statusEfet ? (STATUS_LABELS[statusEfet] || statusEfet) : null;
 
   return (
-    <div style={{ ...styles.tableRow, background: c.status === "CONCLUIDA" ? "rgba(46, 230, 141, 0.05)" : undefined }}>
+    <div style={{ ...styles.tableRow, background: statusEfet === "CONCLUIDA" ? "rgba(46, 230, 141, 0.05)" : undefined }}>
       <div style={{ flex: "0 0 28px", display: "flex", alignItems: "center", justifyContent: "center" }}>
         {c.mudanca_nao_vista && <span style={styles.bolinhaAmarela} title="mudou na ultima consulta"></span>}
       </div>
@@ -506,6 +524,11 @@ function CobrancaRow({
       <div style={{ flex: "0 0 90px" }}>{c.valor ? "R$ " + c.valor : <span style={styles.cellFaint}>—</span>}</div>
       <div style={{ flex: "0 0 180px" }}>
         {statusLabel ? <span style={{ color: statusColor, fontWeight: 500 }}>{statusLabel}</span> : <span style={styles.cellFaint}>nao consultado</span>}
+        {mostraDivergencia && (
+          <div style={styles.statusDivergencia} title="O PSP devolveu este status na ultima consulta, mas o pagamento foi confirmado via E2E">
+            PSP agora: {STATUS_LABELS[statusAtualPSP!] || statusAtualPSP}
+          </div>
+        )}
       </div>
       <div style={{ flex: "1 1 220px", overflow: "hidden" }}>
         {c.end_to_end_id ? (
@@ -550,6 +573,12 @@ function HistoricoModal({
   cobranca: Cobranca; historico: HistoricoItem[]; onClose: () => void;
   onCopiar: (t: string, id: string) => void; copiado: string | null;
 }) {
+  const efetivo = statusEfetivo(cobranca);
+  const corEfetivo =
+    efetivo === "CONCLUIDA" ? "var(--green)" :
+    efetivo === "ATIVA" ? "var(--yellow)" :
+    "var(--text-faint)";
+
   return (
     <div style={styles.modalBackdrop} onClick={onClose}>
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -557,6 +586,11 @@ function HistoricoModal({
           <div>
             <div style={styles.modalTitle}>historico de consultas</div>
             <div style={styles.modalSubtitle}>{cobranca.merchant_name} · {cobranca.txid || "—"}</div>
+            {cobranca.end_to_end_id && (
+              <div style={{ ...styles.modalConfirmado, color: corEfetivo }}>
+                ✓ pagamento confirmado · E2E capturado
+              </div>
+            )}
           </div>
           <button onClick={onClose} style={styles.modalClose}>×</button>
         </div>
@@ -650,9 +684,7 @@ const styles: { [k: string]: React.CSSProperties } = {
     fontSize: 14, cursor: "pointer", borderRadius: 3,
     transition: "all 0.15s",
   },
-  e2eCell: {
-    display: "flex", alignItems: "center", gap: 4,
-  },
+  e2eCell: { display: "flex", alignItems: "center", gap: 4 },
   e2eCode: {
     fontFamily: "var(--mono)", fontSize: 11, color: "var(--green)",
     background: "rgba(46, 230, 141, 0.08)", padding: "3px 6px",
@@ -662,6 +694,10 @@ const styles: { [k: string]: React.CSSProperties } = {
   pagadorInfo: {
     fontSize: 10, color: "var(--text-faint)", marginTop: 3,
     whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+  },
+  statusDivergencia: {
+    fontSize: 9, color: "var(--text-faint)", marginTop: 4,
+    fontStyle: "italic",
   },
   msg: { fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 14, color: "var(--text-dim)" },
   empty: { padding: "60px 20px", textAlign: "center", border: "1px dashed var(--border)", borderRadius: 6 },
@@ -695,6 +731,9 @@ const styles: { [k: string]: React.CSSProperties } = {
   },
   modalTitle: { fontSize: 14, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.15em" },
   modalSubtitle: { fontSize: 16, color: "var(--text)", marginTop: 6 },
+  modalConfirmado: {
+    fontSize: 12, marginTop: 8, fontWeight: 600,
+  },
   modalClose: {
     background: "transparent", color: "var(--text-faint)", fontSize: 24,
     width: 32, height: 32, borderRadius: 4, border: "none", cursor: "pointer",
