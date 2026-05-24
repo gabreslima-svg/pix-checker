@@ -20,6 +20,18 @@ type Cobranca = {
   erro: string | null;
   observacao: string | null;
   created_at: string;
+  mudanca_nao_vista: boolean;
+};
+
+type HistoricoItem = {
+  id: string;
+  cobranca_id: string;
+  status: string | null;
+  valor: string | null;
+  end_to_end_id: string | null;
+  horario_pagamento: string | null;
+  erro: string | null;
+  consultado_em: string;
 };
 
 const STATUS_LABELS: { [k: string]: string } = {
@@ -32,21 +44,11 @@ const STATUS_LABELS: { [k: string]: string } = {
   AUTH_NECESSARIA: "auth necessaria",
 };
 
-// Extrai BR Codes de um bloco de texto, lidando com quebras de linha aleatorias
-// Procura padrao: 0002... + qualquer coisa + 6304XXXX (CRC de 4 hex)
 function extrairBrCodes(input: string): string[] {
-  // Remove TODAS as quebras de linha e espacos
   const limpo = input.replace(/\s+/g, "");
-
-  // Regex: comeca com 00020 (Payload Format Indicator + valor 01) ate 6304 + 4 hex
   const regex = /00020[0-9]\d{2,4}.*?6304[0-9A-Fa-f]{4}/g;
   const matches = limpo.match(regex);
-
-  if (matches && matches.length > 0) {
-    return matches;
-  }
-
-  // Fallback: se nao casou regex, tenta processar como antes (linha por linha)
+  if (matches && matches.length > 0) return matches;
   return input.split(/[\n\r]+/).map((l) => l.trim()).filter(Boolean);
 }
 
@@ -57,6 +59,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [checagemAtiva, setChecagemAtiva] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
+  const [historicoAberto, setHistoricoAberto] = useState<Cobranca | null>(null);
+  const [historico, setHistorico] = useState<HistoricoItem[]>([]);
 
   async function carregar() {
     const { data, error } = await supabase
@@ -71,20 +75,51 @@ export default function Home() {
 
   async function consultarPorId(id: string, url: string) {
     try {
+      // Busca status atual antes de consultar
+      const { data: antes } = await supabase
+        .from("cobrancas")
+        .select("status, valor, end_to_end_id, horario_pagamento")
+        .eq("id", id)
+        .single();
+
       const res = await fetch("/api/check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
       });
       const data = await res.json();
+
+      const novoStatus = data.status || null;
+      const novoValor = data.valor || null;
+      const novoE2e = data.endToEndId || null;
+      const novoHorario = data.horario || null;
+      const novoErro = data.ok ? null : data.erro || "Erro desconhecido";
+
+      // Detecta se mudou alguma coisa significativa
+      const mudou = !antes || antes.status !== novoStatus
+        || antes.valor !== novoValor
+        || antes.end_to_end_id !== novoE2e
+        || antes.horario_pagamento !== novoHorario;
+
       await supabase.from("cobrancas").update({
-        status: data.status || null,
-        valor: data.valor || null,
-        end_to_end_id: data.endToEndId || null,
-        horario_pagamento: data.horario || null,
+        status: novoStatus,
+        valor: novoValor,
+        end_to_end_id: novoE2e,
+        horario_pagamento: novoHorario,
         ultima_checagem: new Date().toISOString(),
-        erro: data.ok ? null : data.erro || "Erro desconhecido",
+        erro: novoErro,
+        mudanca_nao_vista: mudou ? true : undefined,
       }).eq("id", id);
+
+      // Salva no historico
+      await supabase.from("cobrancas_historico").insert({
+        cobranca_id: id,
+        status: novoStatus,
+        valor: novoValor,
+        end_to_end_id: novoE2e,
+        horario_pagamento: novoHorario,
+        erro: novoErro,
+      });
     } catch (e: any) {
       await supabase.from("cobrancas").update({
         ultima_checagem: new Date().toISOString(),
@@ -98,9 +133,7 @@ export default function Home() {
     setLoading(true);
     setMsg("");
 
-    // Usa o extrator inteligente
     const linhas = extrairBrCodes(input);
-
     let dinamicosNovos = 0, estaticosNovos = 0, invalidos = 0, duplicados = 0;
     const idsParaConsultar: { id: string; url: string }[] = [];
 
@@ -134,7 +167,6 @@ export default function Home() {
 
       if (parsed.tipo === "invalido") {
         invalidos++;
-        // NAO insere mais invalidos no banco (so conta)
         continue;
       }
 
@@ -215,6 +247,27 @@ export default function Home() {
     await carregar();
   }
 
+  async function abrirHistorico(c: Cobranca) {
+    setHistoricoAberto(c);
+    const { data } = await supabase
+      .from("cobrancas_historico")
+      .select("*")
+      .eq("cobranca_id", c.id)
+      .order("consultado_em", { ascending: false });
+    setHistorico((data as HistoricoItem[]) || []);
+
+    // Marca como visto
+    if (c.mudanca_nao_vista) {
+      await supabase.from("cobrancas").update({ mudanca_nao_vista: false }).eq("id", c.id);
+      await carregar();
+    }
+  }
+
+  function fecharHistorico() {
+    setHistoricoAberto(null);
+    setHistorico([]);
+  }
+
   const ordenadas = [...cobrancas].sort((a, b) => {
     const aT = a.ultima_checagem ? new Date(a.ultima_checagem).getTime() : 0;
     const bT = b.ultima_checagem ? new Date(b.ultima_checagem).getTime() : 0;
@@ -234,6 +287,8 @@ export default function Home() {
     ? ordenadas.filter((c) => c.tipo === "estatico")
     : filtroStatus === "invalidos"
     ? ordenadas.filter((c) => c.tipo === "invalido")
+    : filtroStatus === "com_mudanca"
+    ? ordenadas.filter((c) => c.mudanca_nao_vista)
     : ordenadas.filter((c) => c.status === filtroStatus);
 
   const totais = {
@@ -244,6 +299,7 @@ export default function Home() {
     pagas: cobrancas.filter((c) => c.status === "CONCLUIDA").length,
     pendentes: cobrancas.filter((c) => c.status === "ATIVA").length,
     removidas: cobrancas.filter((c) => c.status && c.status.startsWith("REMOVIDA")).length,
+    comMudanca: cobrancas.filter((c) => c.mudanca_nao_vista).length,
   };
 
   return (
@@ -261,11 +317,10 @@ export default function Home() {
           </div>
           <div style={styles.stats}>
             <Stat label="total" value={totais.total} />
-            <Stat label="dinamicas" value={totais.dinamicas} />
-            <Stat label="estaticas" value={totais.estaticas} dim />
             <Stat label="pendentes" value={totais.pendentes} color="var(--yellow)" />
             <Stat label="pagas" value={totais.pagas} color="var(--green)" />
             <Stat label="removidas" value={totais.removidas} color="var(--red)" />
+            <Stat label="mudaram" value={totais.comMudanca} color="var(--accent)" />
           </div>
         </header>
 
@@ -295,6 +350,7 @@ export default function Home() {
             <div style={styles.cardActions}>
               <select value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)} style={styles.select}>
                 <option value="todos">todos os status</option>
+                <option value="com_mudanca">apenas com mudanca</option>
                 <option value="nao_consultados">nao consultados</option>
                 <option value="ATIVA">ATIVA / pendente</option>
                 <option value="CONCLUIDA">CONCLUIDA / paga</option>
@@ -326,20 +382,36 @@ export default function Home() {
           ) : (
             <div style={styles.table}>
               <div style={styles.tableHead}>
+                <div style={{ flex: "0 0 28px" }}></div>
                 <div style={{ flex: "0 0 90px" }}>tipo</div>
                 <div style={{ flex: "1 1 160px" }}>PSP</div>
                 <div style={{ flex: "1 1 200px" }}>merchant / txid</div>
                 <div style={{ flex: "0 0 100px" }}>valor</div>
                 <div style={{ flex: "0 0 200px" }}>status</div>
                 <div style={{ flex: "0 0 140px" }}>checagem</div>
-                <div style={{ flex: "0 0 90px" }}>acao</div>
+                <div style={{ flex: "0 0 120px" }}>acao</div>
               </div>
               {exibidas.map((c) => (
-                <CobrancaRow key={c.id} c={c} verificando={checagemAtiva === c.id} onVerificar={() => verificarUma(c)} onRemover={() => remover(c.id)} />
+                <CobrancaRow
+                  key={c.id}
+                  c={c}
+                  verificando={checagemAtiva === c.id}
+                  onVerificar={() => verificarUma(c)}
+                  onRemover={() => remover(c.id)}
+                  onHistorico={() => abrirHistorico(c)}
+                />
               ))}
             </div>
           )}
         </section>
+
+        {historicoAberto && (
+          <HistoricoModal
+            cobranca={historicoAberto}
+            historico={historico}
+            onClose={fecharHistorico}
+          />
+        )}
 
         <footer style={styles.footer}>
           <span>consulta direta no endpoint publico do PSP · sem mover dinheiro</span>
@@ -358,7 +430,12 @@ function Stat({ label, value, color, dim }: { label: string; value: number; colo
   );
 }
 
-function CobrancaRow({ c, verificando, onVerificar, onRemover }: { c: Cobranca; verificando: boolean; onVerificar: () => void; onRemover: () => void }) {
+function CobrancaRow({
+  c, verificando, onVerificar, onRemover, onHistorico,
+}: {
+  c: Cobranca; verificando: boolean;
+  onVerificar: () => void; onRemover: () => void; onHistorico: () => void;
+}) {
   const statusColor =
     c.status === "CONCLUIDA" ? "var(--green)" :
     c.status === "ATIVA" ? "var(--yellow)" :
@@ -376,6 +453,9 @@ function CobrancaRow({ c, verificando, onVerificar, onRemover }: { c: Cobranca; 
 
   return (
     <div style={{ ...styles.tableRow, background: c.status === "CONCLUIDA" ? "rgba(46, 230, 141, 0.05)" : undefined }}>
+      <div style={{ flex: "0 0 28px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {c.mudanca_nao_vista && <span style={styles.bolinhaAmarela} title="mudou na ultima consulta — clique no olhinho pra ver"></span>}
+      </div>
       <div style={{ flex: "0 0 90px" }}>
         <span style={{ ...styles.tipoBadge, background: tipoStyle.bg, color: tipoStyle.fg }}>{c.tipo}</span>
       </div>
@@ -392,13 +472,74 @@ function CobrancaRow({ c, verificando, onVerificar, onRemover }: { c: Cobranca; 
       <div style={{ flex: "0 0 140px", ...styles.cellDim }}>
         {c.ultima_checagem ? new Date(c.ultima_checagem).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—"}
       </div>
-      <div style={{ flex: "0 0 90px", display: "flex", gap: 6 }}>
+      <div style={{ flex: "0 0 120px", display: "flex", gap: 6 }}>
+        <button onClick={onHistorico} style={{ ...styles.btnSmall, ...styles.btnGhost }} title="ver historico">
+          👁
+        </button>
         {c.tipo === "dinamico" && (
           <button onClick={onVerificar} disabled={verificando} style={{ ...styles.btnSmall, ...styles.btnPrimary }}>
             {verificando ? "..." : "↻"}
           </button>
         )}
         <button onClick={onRemover} style={{ ...styles.btnSmall, ...styles.btnGhost }}>×</button>
+      </div>
+    </div>
+  );
+}
+
+function HistoricoModal({
+  cobranca, historico, onClose,
+}: { cobranca: Cobranca; historico: HistoricoItem[]; onClose: () => void }) {
+  return (
+    <div style={styles.modalBackdrop} onClick={onClose}>
+      <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div style={styles.modalHeader}>
+          <div>
+            <div style={styles.modalTitle}>historico de consultas</div>
+            <div style={styles.modalSubtitle}>{cobranca.merchant_name} · {cobranca.txid || "—"}</div>
+          </div>
+          <button onClick={onClose} style={styles.modalClose}>×</button>
+        </div>
+
+        {historico.length === 0 ? (
+          <div style={styles.empty}>
+            <span style={styles.emptyText}>nenhuma consulta registrada ainda</span>
+          </div>
+        ) : (
+          <div style={styles.timeline}>
+            {historico.map((h, idx) => {
+              const anterior = historico[idx + 1];
+              const mudouStatus = anterior && anterior.status !== h.status;
+              const cor =
+                h.status === "CONCLUIDA" ? "var(--green)" :
+                h.status === "ATIVA" ? "var(--yellow)" :
+                h.status && h.status.startsWith("REMOVIDA") ? "var(--red)" :
+                "var(--text-faint)";
+              return (
+                <div key={h.id} style={styles.timelineItem}>
+                  <div style={{ ...styles.timelineDot, background: cor }}></div>
+                  <div style={styles.timelineContent}>
+                    <div style={styles.timelineWhen}>
+                      {new Date(h.consultado_em).toLocaleString("pt-BR")}
+                      {idx === 0 && <span style={styles.timelineBadge}> ultima</span>}
+                      {mudouStatus && <span style={styles.timelineMudou}> · mudou de "{anterior?.status || "—"}"</span>}
+                    </div>
+                    <div style={styles.timelineStatus}>
+                      <span style={{ color: cor, fontWeight: 600 }}>
+                        {h.status ? (STATUS_LABELS[h.status] || h.status) : "—"}
+                      </span>
+                      {h.valor && <span style={styles.cellDim}> · R$ {h.valor}</span>}
+                    </div>
+                    {h.end_to_end_id && (
+                      <div style={styles.timelineE2e}>E2E: {h.end_to_end_id}</div>
+                    )}
+                    {h.erro && <div style={styles.timelineErro}>{h.erro}</div>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -443,4 +584,41 @@ const styles: { [k: string]: React.CSSProperties } = {
   cellDim: { color: "var(--text-dim)" },
   cellFaint: { color: "var(--text-faint)" },
   footer: { marginTop: 40, paddingTop: 20, borderTop: "1px solid var(--border)", textAlign: "center", color: "var(--text-faint)", fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 13 },
+  bolinhaAmarela: {
+    display: "inline-block", width: 10, height: 10, borderRadius: "50%",
+    background: "var(--yellow)", boxShadow: "0 0 8px rgba(245, 197, 66, 0.6)",
+  },
+  modalBackdrop: {
+    position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    zIndex: 100, padding: 20, backdropFilter: "blur(4px)",
+  },
+  modal: {
+    background: "var(--bg-card)", border: "1px solid var(--border-strong)",
+    borderRadius: 10, padding: 24, maxWidth: 720, width: "100%",
+    maxHeight: "85vh", overflowY: "auto",
+  },
+  modalHeader: {
+    display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+    marginBottom: 20, paddingBottom: 16, borderBottom: "1px solid var(--border)",
+  },
+  modalTitle: { fontSize: 14, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.15em" },
+  modalSubtitle: { fontSize: 16, color: "var(--text)", marginTop: 6 },
+  modalClose: {
+    background: "transparent", color: "var(--text-faint)", fontSize: 24,
+    width: 32, height: 32, borderRadius: 4,
+  },
+  timeline: { display: "flex", flexDirection: "column", gap: 0, position: "relative" },
+  timelineItem: { display: "flex", gap: 16, padding: "12px 0", borderLeft: "1px solid var(--border)", marginLeft: 6, paddingLeft: 24, position: "relative" },
+  timelineDot: {
+    position: "absolute", left: -6, top: 16, width: 13, height: 13,
+    borderRadius: "50%", border: "2px solid var(--bg-card)",
+  },
+  timelineContent: { flex: 1 },
+  timelineWhen: { fontSize: 11, color: "var(--text-faint)" },
+  timelineBadge: { color: "var(--accent)", fontWeight: 700, marginLeft: 6 },
+  timelineMudou: { color: "var(--yellow)", fontStyle: "italic" },
+  timelineStatus: { fontSize: 13, marginTop: 4 },
+  timelineE2e: { fontSize: 10, color: "var(--text-faint)", marginTop: 4, fontFamily: "var(--mono)" },
+  timelineErro: { fontSize: 11, color: "var(--red)", marginTop: 4 },
 };
