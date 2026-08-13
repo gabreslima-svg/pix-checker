@@ -1,252 +1,505 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState } from "react";
 
 export default function LandingPage() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
         :root {
-          --azul: #0052FF; --azul-escuro: #001233; --azul-profundo: #000B1F;
-          --azul-hover: #0040CC; --branco: #FFFFFF; --off-white: #F8F9FC;
-          --cinza-linha: #E4E7EF; --cinza-texto: #5A6379; --preto: #0A0E1A;
-          --serif: 'Instrument Serif', Georgia, serif;
-          --sans: 'Inter', system-ui, sans-serif;
-          --mono: 'JetBrains Mono', monospace;
+          --bg: #0a0a0a; --bg-2: #111111; --bg-3: #171717;
+          --azul: #2563EB; --azul-claro: #3B82F6; --azul-glow: rgba(37,99,235,0.15);
+          --branco: #FFFFFF; --cinza-1: #A3A3A3; --cinza-2: #737373; --cinza-borda: #262626;
+          --sans: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', monospace;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: var(--sans); color: var(--preto); background: var(--branco); -webkit-font-smoothing: antialiased; line-height: 1.5; }
+        html { scroll-behavior: smooth; }
+        body { font-family: var(--sans); color: var(--branco); background: var(--bg); -webkit-font-smoothing: antialiased; line-height: 1.5; }
+        a { color: inherit; text-decoration: none; }
+        button { cursor: pointer; font-family: inherit; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-        .nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--cinza-linha); }
-        .nav-inner { display: flex; justify-content: space-between; align-items: center; height: 64px; }
-        .logo { display: flex; align-items: center; gap: 8px; font-family: var(--serif); font-size: 24px; color: var(--preto); letter-spacing: -0.02em; }
-        .logo-dot { width: 10px; height: 10px; background: var(--azul); border-radius: 50%; }
-        .logo b { font-family: var(--sans); font-weight: 700; font-style: normal; font-size: 18px; letter-spacing: -0.02em; }
-        .nav-cta { background: var(--azul); color: var(--branco); padding: 10px 20px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; transition: background 0.15s; }
-        .nav-cta:hover { background: var(--azul-hover); }
-        .hero { padding: 80px 0 100px; position: relative; overflow: hidden; }
-        .hero::before { content: ''; position: absolute; top: -200px; right: -200px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(0,82,255,0.08) 0%, transparent 70%); pointer-events: none; }
-        .eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border: 1px solid var(--cinza-linha); border-radius: 999px; font-size: 12px; font-weight: 500; color: var(--cinza-texto); margin-bottom: 32px; background: var(--branco); }
-        .eyebrow::before { content: ''; width: 6px; height: 6px; background: #10B981; border-radius: 50%; box-shadow: 0 0 0 3px rgba(16,185,129,0.15); animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        .h1 { font-family: var(--serif); font-size: clamp(48px, 7vw, 88px); line-height: 0.98; letter-spacing: -0.03em; font-weight: 400; max-width: 900px; margin-bottom: 32px; }
-        .h1 em { font-style: italic; color: var(--azul); }
-        .h1 b { font-family: var(--sans); font-weight: 700; font-style: normal; }
-        .hero-sub { font-size: 20px; line-height: 1.5; color: var(--cinza-texto); max-width: 620px; margin-bottom: 40px; }
-        .hero-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 48px; }
-        .btn-primary { background: var(--azul); color: var(--branco); padding: 16px 28px; border-radius: 999px; font-size: 15px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.15s; border: none; cursor: pointer; }
-        .btn-primary:hover { background: var(--azul-hover); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,82,255,0.25); }
-        .btn-primary svg { transition: transform 0.15s; }
-        .btn-primary:hover svg { transform: translateX(3px); }
-        .btn-ghost { color: var(--preto); padding: 16px 8px; font-size: 15px; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
-        .btn-ghost:hover { color: var(--azul); }
-        .prova-social { display: flex; align-items: center; gap: 24px; font-size: 13px; color: var(--cinza-texto); }
-        .avatares { display: flex; }
-        .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--azul), var(--azul-escuro)); border: 2px solid var(--branco); margin-left: -8px; display: flex; align-items: center; justify-content: center; color: var(--branco); font-size: 11px; font-weight: 600; }
-        .avatar:first-child { margin-left: 0; }
-        .estrelas { color: #F59E0B; font-size: 14px; }
-        .metricas-section { background: var(--azul-profundo); color: var(--branco); padding: 80px 0; position: relative; overflow: hidden; }
-        .metricas-section::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 20% 30%, rgba(0,82,255,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(0,82,255,0.1) 0%, transparent 50%); pointer-events: none; }
-        .metricas-header { text-align: center; margin-bottom: 60px; position: relative; }
-        .metricas-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--azul); margin-bottom: 16px; }
-        .metricas-title { font-family: var(--serif); font-size: clamp(32px, 4vw, 48px); line-height: 1.1; font-weight: 400; max-width: 700px; margin: 0 auto; }
-        .metricas-title em { font-style: italic; color: #6B9AFF; }
-        .metricas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; overflow: hidden; position: relative; }
-        .metrica { background: var(--azul-profundo); padding: 40px 28px; text-align: left; }
-        .metrica-numero { font-family: var(--mono); font-size: 44px; font-weight: 600; color: var(--branco); line-height: 1; margin-bottom: 12px; letter-spacing: -0.02em; }
-        .metrica-numero span { font-size: 24px; color: #6B9AFF; }
-        .metrica-label { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
-        .metrica-desc { font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.4; }
-        section { padding: 100px 0; }
-        .section-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--azul); margin-bottom: 20px; }
-        .section-title { font-family: var(--serif); font-size: clamp(36px, 4.5vw, 56px); line-height: 1.05; letter-spacing: -0.02em; font-weight: 400; max-width: 700px; margin-bottom: 24px; }
-        .section-title em { font-style: italic; color: var(--azul); }
-        .section-sub { font-size: 18px; color: var(--cinza-texto); max-width: 620px; margin-bottom: 60px; }
-        .como-funciona { background: var(--off-white); }
-        .passos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-        .passo { background: var(--branco); border: 1px solid var(--cinza-linha); border-radius: 20px; padding: 40px 32px; transition: all 0.2s; }
-        .passo:hover { border-color: var(--azul); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,82,255,0.08); }
-        .passo-num { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--azul); margin-bottom: 32px; display: flex; align-items: center; gap: 8px; }
-        .passo-num::before { content: ''; width: 24px; height: 1px; background: var(--azul); }
-        .passo-titulo { font-family: var(--serif); font-size: 28px; font-weight: 400; line-height: 1.15; margin-bottom: 16px; }
-        .passo-desc { font-size: 15px; color: var(--cinza-texto); line-height: 1.6; }
-        .para-quem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
-        .quadro { border: 1px solid var(--cinza-linha); border-radius: 20px; padding: 40px; }
-        .quadro.positivo { background: linear-gradient(180deg, rgba(0,82,255,0.03) 0%, transparent 100%); border-color: rgba(0,82,255,0.2); }
-        .quadro-titulo { font-family: var(--serif); font-size: 24px; font-weight: 400; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
-        .quadro.positivo .quadro-titulo { color: var(--azul); }
-        .quadro-lista { list-style: none; }
-        .quadro-lista li { padding: 12px 0; border-bottom: 1px solid var(--cinza-linha); display: flex; align-items: flex-start; gap: 12px; font-size: 15px; color: var(--cinza-texto); }
-        .quadro-lista li:last-child { border: none; }
-        .quadro-lista li strong { color: var(--preto); font-weight: 600; }
-        .marcador { margin-top: 2px; flex-shrink: 0; }
-        .cases { background: var(--off-white); }
-        .cases-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-        .case { background: var(--branco); border-radius: 20px; padding: 32px; border: 1px solid var(--cinza-linha); }
-        .case-metrica { font-family: var(--mono); font-size: 40px; font-weight: 600; color: var(--azul); line-height: 1; margin-bottom: 8px; letter-spacing: -0.02em; }
-        .case-desc { font-size: 13px; color: var(--cinza-texto); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; margin-bottom: 24px; }
-        .case-quote { font-family: var(--serif); font-size: 20px; line-height: 1.4; font-style: italic; color: var(--preto); margin-bottom: 20px; }
-        .case-autor { display: flex; align-items: center; gap: 12px; padding-top: 20px; border-top: 1px solid var(--cinza-linha); }
-        .case-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--azul), var(--azul-escuro)); display: flex; align-items: center; justify-content: center; color: var(--branco); font-weight: 600; font-size: 14px; }
-        .case-info { flex: 1; }
-        .case-nome { font-size: 14px; font-weight: 600; }
-        .case-empresa { font-size: 12px; color: var(--cinza-texto); }
+
+        .nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,10,0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--cinza-borda); }
+        .nav-inner { display: flex; justify-content: space-between; align-items: center; height: 68px; }
+        .logo { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+        .logo-badge { width: 32px; height: 32px; background: var(--azul); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: var(--branco); box-shadow: 0 0 20px var(--azul-glow); }
+        .nav-links { display: flex; gap: 32px; font-size: 14px; color: var(--cinza-1); font-weight: 500; }
+        .nav-links a:hover { color: var(--branco); }
+        .nav-cta { background: var(--azul); color: var(--branco); padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        .nav-cta:hover { background: var(--azul-claro); transform: translateY(-1px); }
+        @media (max-width: 768px) { .nav-links { display: none; } }
+
+        .hero { padding: 100px 0 80px; position: relative; overflow: hidden; text-align: center; }
+        .hero::before { content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 800px; height: 400px; background: radial-gradient(ellipse, var(--azul-glow) 0%, transparent 60%); pointer-events: none; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1px solid var(--cinza-borda); background: var(--bg-2); border-radius: 999px; font-size: 12px; color: var(--cinza-1); margin-bottom: 40px; position: relative; z-index: 1; }
+        .hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #10B981; box-shadow: 0 0 8px #10B981; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .hero h1 { font-size: clamp(48px, 8vw, 96px); font-weight: 800; line-height: 0.95; letter-spacing: -0.04em; margin-bottom: 32px; max-width: 950px; margin-left: auto; margin-right: auto; position: relative; z-index: 1; }
+        .hero h1 span { background: linear-gradient(135deg, var(--azul-claro), #60A5FA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero-sub { font-size: 20px; color: var(--cinza-1); max-width: 640px; margin: 0 auto 48px; line-height: 1.5; position: relative; z-index: 1; }
+        .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 80px; position: relative; z-index: 1; }
+        .btn-primary { background: var(--azul); color: var(--branco); padding: 16px 32px; border-radius: 10px; font-size: 15px; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; box-shadow: 0 4px 20px rgba(37,99,235,0.3); }
+        .btn-primary:hover { background: var(--azul-claro); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(37,99,235,0.4); }
+        .btn-secondary { background: var(--bg-2); color: var(--branco); padding: 16px 32px; border-radius: 10px; font-size: 15px; font-weight: 600; border: 1px solid var(--cinza-borda); transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-secondary:hover { border-color: var(--azul); background: var(--bg-3); }
+
+        .pilares { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; max-width: 800px; margin: 0 auto; position: relative; z-index: 1; }
+        .pilar { text-align: center; padding: 24px; border-right: 1px solid var(--cinza-borda); }
+        .pilar:last-child { border-right: none; }
+        .pilar-num { font-family: var(--mono); font-size: 32px; font-weight: 700; color: var(--branco); line-height: 1; margin-bottom: 8px; }
+        .pilar-label { font-size: 12px; color: var(--cinza-1); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; }
+        @media (max-width: 640px) { .pilares { grid-template-columns: 1fr; } .pilar { border-right: none; border-bottom: 1px solid var(--cinza-borda); } .pilar:last-child { border-bottom: none; } }
+
+        section { padding: 100px 0; position: relative; }
+        .section-eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--azul-claro); font-weight: 600; margin-bottom: 16px; }
+        .section-titulo { font-size: clamp(36px, 5vw, 56px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 24px; max-width: 720px; }
+        .section-sub { font-size: 18px; color: var(--cinza-1); max-width: 560px; margin-bottom: 56px; }
+
+        .beneficios { background: var(--bg-2); border-top: 1px solid var(--cinza-borda); border-bottom: 1px solid var(--cinza-borda); }
+        .beneficios-header { text-align: center; margin-bottom: 64px; }
+        .beneficios-header .section-titulo, .beneficios-header .section-sub { margin-left: auto; margin-right: auto; }
+        .beneficios-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+        .beneficio { padding: 32px 24px; background: var(--bg-3); border: 1px solid var(--cinza-borda); border-radius: 16px; transition: all 0.3s; }
+        .beneficio:hover { border-color: var(--azul); transform: translateY(-4px); }
+        .beneficio-icone { width: 44px; height: 44px; background: rgba(37,99,235,0.1); border: 1px solid rgba(37,99,235,0.3); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: var(--azul-claro); }
+        .beneficio h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em; }
+        .beneficio p { font-size: 14px; color: var(--cinza-1); line-height: 1.55; }
+        @media (max-width: 768px) { .beneficios-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 480px) { .beneficios-grid { grid-template-columns: 1fr; } }
+
+        .passos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 60px; }
+        .passo { padding: 32px 24px; background: var(--bg-2); border: 1px solid var(--cinza-borda); border-radius: 16px; position: relative; transition: all 0.3s; }
+        .passo:hover { border-color: var(--azul); background: var(--bg-3); }
+        .passo-numero { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--azul-claro); margin-bottom: 24px; display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; background: rgba(37,99,235,0.1); border: 1px solid rgba(37,99,235,0.3); border-radius: 999px; }
+        .passo h3 { font-size: 20px; font-weight: 700; margin-bottom: 12px; letter-spacing: -0.02em; }
+        .passo p { font-size: 14px; color: var(--cinza-1); line-height: 1.55; }
+        @media (max-width: 900px) { .passos-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 480px) { .passos-grid { grid-template-columns: 1fr; } }
+
+        .servicos { background: var(--bg-2); border-top: 1px solid var(--cinza-borda); border-bottom: 1px solid var(--cinza-borda); }
+        .servicos-titulo { text-align: center; margin-bottom: 64px; }
+        .servicos-titulo .section-titulo, .servicos-titulo .section-sub { margin-left: auto; margin-right: auto; }
+        .servicos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .servico { padding: 40px 32px; background: var(--bg-3); border: 1px solid var(--cinza-borda); border-radius: 20px; transition: all 0.3s; }
+        .servico:hover { border-color: var(--azul); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(37,99,235,0.1); }
+        .servico.destaque { background: linear-gradient(180deg, rgba(37,99,235,0.08) 0%, var(--bg-3) 100%); border-color: rgba(37,99,235,0.4); position: relative; }
+        .servico.destaque::before { content: 'MAIS ESCOLHIDO'; position: absolute; top: 20px; right: 20px; background: var(--azul); padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; }
+        .servico-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--azul-claro); font-weight: 600; margin-bottom: 12px; }
+        .servico h3 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+        .servico-preco { font-size: 14px; color: var(--cinza-1); margin-bottom: 24px; }
+        .servico-preco strong { color: var(--branco); font-size: 32px; font-weight: 800; font-family: var(--mono); letter-spacing: -0.02em; margin-right: 4px; }
+        .servico ul { list-style: none; margin-bottom: 32px; }
+        .servico li { padding: 10px 0; border-bottom: 1px solid var(--cinza-borda); font-size: 14px; color: var(--cinza-1); display: flex; align-items: flex-start; gap: 10px; }
+        .servico li:last-child { border-bottom: none; }
+        .servico li strong { color: var(--branco); font-weight: 600; }
+        .check-icon { color: var(--azul-claro); flex-shrink: 0; margin-top: 2px; }
+        .servico-cta { display: block; text-align: center; padding: 14px; background: var(--bg); border: 1px solid var(--cinza-borda); border-radius: 10px; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        .servico-cta:hover { background: var(--azul); border-color: var(--azul); }
+        .servico.destaque .servico-cta { background: var(--azul); border-color: var(--azul); }
+        .servico.destaque .servico-cta:hover { background: var(--azul-claro); }
+        @media (max-width: 900px) { .servicos-grid { grid-template-columns: 1fr; } }
+
+        .stats { background: var(--bg); }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding: 60px 0; border-top: 1px solid var(--cinza-borda); border-bottom: 1px solid var(--cinza-borda); }
+        .stat { text-align: center; }
+        .stat-num { font-family: var(--mono); font-size: 48px; font-weight: 700; letter-spacing: -0.03em; color: var(--branco); line-height: 1; margin-bottom: 12px; }
+        .stat-num span { color: var(--azul-claro); }
+        .stat-label { font-size: 13px; color: var(--cinza-1); }
+        @media (max-width: 768px) { .stats-grid { grid-template-columns: 1fr 1fr; gap: 32px; } }
+
+        .depoimentos { padding: 100px 0; }
+        .depoimentos-titulo { text-align: center; margin-bottom: 64px; }
+        .depoimentos-titulo .section-titulo, .depoimentos-titulo .section-sub { margin-left: auto; margin-right: auto; }
+        .depoimentos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .depoimento { padding: 32px; background: var(--bg-2); border: 1px solid var(--cinza-borda); border-radius: 16px; }
+        .depoimento-estrelas { color: #FBBF24; margin-bottom: 16px; font-size: 16px; letter-spacing: 2px; }
+        .depoimento-texto { font-size: 15px; line-height: 1.6; color: var(--cinza-1); margin-bottom: 24px; }
+        .depoimento-autor { display: flex; align-items: center; gap: 12px; padding-top: 20px; border-top: 1px solid var(--cinza-borda); }
+        .autor-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--azul), #1e40af); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+        .autor-nome { font-size: 14px; font-weight: 600; }
+        .autor-cargo { font-size: 12px; color: var(--cinza-1); }
+        @media (max-width: 900px) { .depoimentos-grid { grid-template-columns: 1fr; } }
+
         .faq-lista { max-width: 800px; margin: 0 auto; }
-        .faq-item { border-bottom: 1px solid var(--cinza-linha); }
-        .faq-pergunta { width: 100%; background: none; border: none; padding: 24px 0; text-align: left; font-family: var(--sans); font-size: 18px; font-weight: 600; color: var(--preto); cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 24px; }
-        .faq-pergunta:hover { color: var(--azul); }
-        .faq-icon { flex-shrink: 0; transition: transform 0.2s; color: var(--azul); }
+        .faq-item { border: 1px solid var(--cinza-borda); border-radius: 12px; margin-bottom: 12px; background: var(--bg-2); transition: border 0.2s; }
+        .faq-item.aberto { border-color: var(--azul); }
+        .faq-pergunta { width: 100%; background: none; border: none; padding: 20px 24px; text-align: left; font-size: 16px; font-weight: 600; color: var(--branco); display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+        .faq-icon { flex-shrink: 0; transition: transform 0.2s; color: var(--azul-claro); }
         .faq-item.aberto .faq-icon { transform: rotate(45deg); }
-        .faq-resposta { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; font-size: 15px; color: var(--cinza-texto); line-height: 1.6; }
-        .faq-item.aberto .faq-resposta { max-height: 300px; padding-bottom: 24px; }
-        .cta-final { background: var(--azul); color: var(--branco); border-radius: 32px; padding: 80px 40px; text-align: center; margin: 40px auto 80px; max-width: 1152px; position: relative; overflow: hidden; }
-        .cta-final::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 0%, transparent 40%), radial-gradient(circle at 80% 80%, rgba(255,255,255,0.08) 0%, transparent 40%); }
+        .faq-resposta { max-height: 0; overflow: hidden; transition: max-height 0.3s, padding 0.3s; font-size: 14px; color: var(--cinza-1); line-height: 1.6; padding: 0 24px; }
+        .faq-item.aberto .faq-resposta { max-height: 400px; padding: 0 24px 24px; }
+
+        .cta-final { background: linear-gradient(180deg, var(--bg) 0%, rgba(37,99,235,0.05) 100%); padding: 100px 0 120px; text-align: center; border-top: 1px solid var(--cinza-borda); position: relative; overflow: hidden; }
+        .cta-final::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 900px; height: 500px; background: radial-gradient(ellipse, var(--azul-glow) 0%, transparent 60%); pointer-events: none; }
         .cta-final > * { position: relative; z-index: 1; }
-        .cta-final h2 { font-family: var(--serif); font-size: clamp(36px, 5vw, 60px); font-weight: 400; line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 24px; max-width: 700px; margin-left: auto; margin-right: auto; }
-        .cta-final h2 em { font-style: italic; }
-        .cta-final p { font-size: 18px; opacity: 0.85; margin-bottom: 40px; max-width: 500px; margin-left: auto; margin-right: auto; }
-        .cta-final .btn-primary { background: var(--branco); color: var(--azul); font-size: 16px; padding: 18px 36px; }
-        .cta-final .btn-primary:hover { background: var(--off-white); box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
-        footer { padding: 40px 0; border-top: 1px solid var(--cinza-linha); font-size: 13px; color: var(--cinza-texto); }
-        .footer-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-        @media (max-width: 768px) {
-          .hero { padding: 48px 0 60px; }
-          section { padding: 60px 0; }
-          .metricas-section { padding: 60px 0; }
-          .metricas-grid { grid-template-columns: repeat(2, 1fr); }
-          .passos { grid-template-columns: 1fr; }
-          .para-quem-grid { grid-template-columns: 1fr; }
-          .cases-grid { grid-template-columns: 1fr; }
-          .cta-final { padding: 60px 24px; margin: 20px 16px 60px; }
-          .hero-actions { width: 100%; }
-          .btn-primary { flex: 1; justify-content: center; }
-        }
+        .cta-final h2 { font-size: clamp(36px, 6vw, 64px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 24px; max-width: 750px; margin-left: auto; margin-right: auto; }
+        .cta-final h2 span { background: linear-gradient(135deg, var(--azul-claro), #60A5FA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .cta-final p { font-size: 18px; color: var(--cinza-1); margin-bottom: 40px; max-width: 560px; margin-left: auto; margin-right: auto; }
+        .cta-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+        footer { padding: 60px 0 40px; border-top: 1px solid var(--cinza-borda); background: var(--bg); }
+        .footer-inner { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+        .footer-brand { max-width: 320px; }
+        .footer-desc { color: var(--cinza-1); font-size: 13px; margin-top: 16px; line-height: 1.55; }
+        .footer h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--cinza-1); margin-bottom: 16px; font-weight: 600; }
+        .footer ul { list-style: none; }
+        .footer li { margin-bottom: 8px; font-size: 14px; color: var(--branco); }
+        .footer li a:hover { color: var(--azul-claro); }
+        .footer-baixo { padding-top: 32px; border-top: 1px solid var(--cinza-borda); display: flex; justify-content: space-between; font-size: 12px; color: var(--cinza-1); flex-wrap: wrap; gap: 12px; }
+        @media (max-width: 768px) { .footer-inner { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 480px) { .footer-inner { grid-template-columns: 1fr; } }
+
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
       `}</style>
-      <nav className="nav"><div className="container nav-inner"><a href="#" className="logo"><span className="logo-dot"></span>GA <b>ATIVOS</b></a><a href="#contato" className="nav-cta">Falar com especialista</a></div></nav>
-      <section className="hero"><div className="container"><div className="eyebrow">Vagas abertas para maio · resposta em ate 24h</div><h1 className="h1">Trafego que <em>vende</em>. <br />Nao so clique <b>que enche relatorio.</b></h1><p className="hero-sub">Gestao de Google Ads focada em resultado real: leads qualificados, vendas rastreadas e ROI que aparece no extrato bancario — nao so no dashboard.</p><div className="hero-actions"><a href="#contato" className="btn-primary">Quero uma analise gratuita<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></a><a href="#como-funciona" className="btn-ghost">Como funciona →</a></div><div className="prova-social"><div className="avatares"><div className="avatar">JM</div><div className="avatar">RS</div><div className="avatar">LP</div><div className="avatar">FC</div></div><div><div className="estrelas">★★★★★</div><div>+120 empresas escalaram com a GA Ativos</div></div></div></div></section>
-      <Metricas />
+
+      <Nav />
+      <Hero />
+      <Beneficios />
       <ComoFunciona />
-      <ParaQuem />
-      <Cases />
+      <Servicos />
+      <Stats />
+      <Depoimentos />
       <Faq />
       <CtaFinal />
-      <footer><div className="container footer-inner"><div>© 2026 GA Ativos · Gestao de trafego pago</div><div>contato@gaativos.com.br</div></div></footer>
+      <Footer />
     </>
   );
 }
 
-function useContador(alvo: number, duracaoMs: number = 1800) {
-  const [valor, setValor] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
-  const iniciado = useRef(false);
-  useEffect(() => {
-    if (iniciado.current) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !iniciado.current) {
-        iniciado.current = true;
-        const inicio = Date.now();
-        const animar = () => {
-          const passou = Date.now() - inicio;
-          const progresso = Math.min(passou / duracaoMs, 1);
-          const easeOut = 1 - Math.pow(1 - progresso, 3);
-          setValor(Math.floor(alvo * easeOut));
-          if (progresso < 1) requestAnimationFrame(animar);
-        };
-        animar();
-      }
-    }, { threshold: 0.3 });
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [alvo, duracaoMs]);
-  return { valor, ref };
-}
-
-function Metrica({ valor, sufixo, prefixo, label, desc }: { valor: number; sufixo?: string; prefixo?: string; label: string; desc: string }) {
-  const { valor: contador, ref } = useContador(valor);
+function Nav() {
   return (
-    <div className="metrica" ref={ref as any}>
-      <div className="metrica-numero">{prefixo && <span>{prefixo}</span>}{contador.toLocaleString('pt-BR')}{sufixo && <span>{sufixo}</span>}</div>
-      <div className="metrica-label">{label}</div>
-      <div className="metrica-desc">{desc}</div>
-    </div>
+    <nav className="nav">
+      <div className="container nav-inner">
+        <a href="#" className="logo">
+          <span className="logo-badge">GA</span>
+          <span>Ativos</span>
+        </a>
+        <div className="nav-links">
+          <a href="#beneficios">Beneficios</a>
+          <a href="#como-funciona">Como funciona</a>
+          <a href="#servicos">Servicos</a>
+          <a href="#faq">FAQ</a>
+        </div>
+        <a href="#contato" className="nav-cta">Falar com especialista</a>
+      </div>
+    </nav>
   );
 }
 
-function Metricas() {
+function Hero() {
   return (
-    <section className="metricas-section"><div className="container"><div className="metricas-header"><div className="metricas-eyebrow">Numeros que operamos</div><h2 className="metricas-title">Do primeiro clique ao <em>caixa da empresa</em></h2></div><div className="metricas-grid">
-      <Metrica valor={47} sufixo="M" prefixo="R$" label="Investidos" desc="Volume gerenciado nos ultimos 12 meses" />
-      <Metrica valor={4} sufixo=".2x" label="ROAS medio" desc="Retorno medio dos clientes ativos" />
-      <Metrica valor={120} sufixo="+" label="Empresas" desc="Clientes ativos escalando anuncios" />
-      <Metrica valor={12} sufixo="d" label="Ramp-up" desc="Tempo medio pro primeiro resultado" />
-    </div></div></section>
+    <section className="hero">
+      <div className="container">
+        <div className="hero-badge">
+          <span className="hero-badge-dot"></span>
+          Vagas abertas · Analise gratuita em 48h
+        </div>
+        <h1>Google Ads que <span>faz vender</span>, nao so aparecer.</h1>
+        <p className="hero-sub">
+          Gestao de trafego pago focada em resultado real. Auditamos, estruturamos e otimizamos suas campanhas ate o ROI aparecer no caixa — nao so no dashboard.
+        </p>
+        <div className="hero-actions">
+          <a href="#contato" className="btn-primary">
+            Solicitar analise gratuita
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </a>
+          <a href="#como-funciona" className="btn-secondary">Como funciona</a>
+        </div>
+        <div className="pilares">
+          <div className="pilar"><div className="pilar-num">R$47M+</div><div className="pilar-label">Gerenciados</div></div>
+          <div className="pilar"><div className="pilar-num">4.2x</div><div className="pilar-label">ROAS medio</div></div>
+          <div className="pilar"><div className="pilar-num">120+</div><div className="pilar-label">Empresas ativas</div></div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Beneficios() {
+  const beneficios = [
+    { icone: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5", titulo: "Estrategia validada", desc: "Nao chutamos. Cada campanha nasce de auditoria + benchmarks reais do seu nicho." },
+    { icone: "M22 12h-4l-3 9L9 3l-3 9H2", titulo: "Tracking preciso", desc: "GTM, conversoes offline, integracao com CRM. Rastreamos cada real ate virar cliente." },
+    { icone: "M12 20V10M18 20V4M6 20v-4", titulo: "Otimizacao semanal", desc: "Report toda semana com numeros crus. Sem metricas de vaidade, sem enrolacao." },
+    { icone: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z", titulo: "Suporte direto", desc: "Voce fala com quem opera. Sem intermediario, sem gerente de contas robotico." },
+  ];
+  return (
+    <section className="beneficios" id="beneficios">
+      <div className="container">
+        <div className="beneficios-header">
+          <div className="section-eyebrow">Por que GA Ativos</div>
+          <h2 className="section-titulo">Feito pra sua verba nao ser queimada.</h2>
+          <p className="section-sub">Trabalhamos como socio da operacao. Se voce nao escala, a gente tambem nao.</p>
+        </div>
+        <div className="beneficios-grid">
+          {beneficios.map((b, i) => (
+            <div className="beneficio" key={i}>
+              <div className="beneficio-icone">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d={b.icone}/>
+                </svg>
+              </div>
+              <h3>{b.titulo}</h3>
+              <p>{b.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
 function ComoFunciona() {
   const passos = [
-    { num: "PASSO 01", titulo: "Auditoria da conta atual", desc: "Analisamos o que ta rodando hoje: onde esta queimando verba, campanhas mal estruturadas, palavras-chave sem intencao de compra. Entregamos um relatorio com plano de acao em ate 48h — sem cobrar nada." },
-    { num: "PASSO 02", titulo: "Estrutura e implementacao", desc: "Montamos as campanhas do zero seguindo a estrategia validada. Tracking preciso via GTM, conversoes offline, integracao com CRM. Cada real gasto e rastreado ate virar cliente pagante." },
-    { num: "PASSO 03", titulo: "Otimizacao continua", desc: "Semanalmente refinamos: cortamos o que nao performa, escalamos o que vende, testamos novos criativos. Voce recebe report semanal com numeros crus — sem enrolacao, sem metricas de vaidade." }
+    { num: "01", titulo: "Auditoria gratuita", desc: "Analisamos sua conta atual, achamos onde ta queimando verba e entregamos plano de acao em 48h." },
+    { num: "02", titulo: "Estruturacao", desc: "Montamos campanhas do zero: keywords, criativos, tracking, integracao com CRM." },
+    { num: "03", titulo: "Escala controlada", desc: "Comecamos com verba baixa, validamos, e escalamos so o que ja provou converter." },
+    { num: "04", titulo: "Otimizacao continua", desc: "Report semanal + reunioes quinzenais. Cortamos rapido, escalamos rapido." },
   ];
   return (
-    <section className="como-funciona" id="como-funciona"><div className="container"><div className="section-eyebrow">Processo</div><h2 className="section-title">Como <em>trabalhamos</em></h2><p className="section-sub">Tres etapas, sem enrolacao. Do primeiro contato a primeira venda gerada em menos de 30 dias.</p><div className="passos">{passos.map((p, i) => (<div className="passo" key={i}><div className="passo-num">{p.num}</div><div className="passo-titulo">{p.titulo}</div><div className="passo-desc">{p.desc}</div></div>))}</div></div></section>
+    <section id="como-funciona">
+      <div className="container" style={{ textAlign: 'center' }}>
+        <div className="section-eyebrow">Como funciona</div>
+        <h2 className="section-titulo" style={{ marginLeft: 'auto', marginRight: 'auto' }}>4 passos. Sem enrolacao.</h2>
+        <p className="section-sub" style={{ marginLeft: 'auto', marginRight: 'auto' }}>Do primeiro contato a primeira venda gerada em menos de 30 dias.</p>
+        <div className="passos-grid">
+          {passos.map((p) => (
+            <div className="passo" key={p.num}>
+              <div className="passo-numero">{p.num}</div>
+              <h3>{p.titulo}</h3>
+              <p>{p.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
-function ParaQuem() {
+function Servicos() {
+  const servicos = [
+    {
+      label: "Basico",
+      titulo: "Starter",
+      preco: "1.497",
+      periodo: "/mes",
+      items: [
+        { destaque: "Ate R$ 10k/mes em midia" },
+        { destaque: "Google Search + Performance Max" },
+        { destaque: "Tracking basico via GTM" },
+        { destaque: "Report semanal por email" },
+        { destaque: "Suporte via WhatsApp" },
+      ],
+      cta: "Comecar com Starter",
+      destaque: false,
+    },
+    {
+      label: "Mais vendido",
+      titulo: "Growth",
+      preco: "2.997",
+      periodo: "/mes",
+      items: [
+        { destaque: "Ate R$ 50k/mes em midia" },
+        { destaque: "Search + PMax + Display + YouTube" },
+        { destaque: "Tracking avancado + conversoes offline" },
+        { destaque: "Integracao CRM (HubSpot, RD, Pipedrive)" },
+        { destaque: "Report semanal + reuniao quinzenal" },
+        { destaque: "A/B teste de criativos" },
+      ],
+      cta: "Comecar com Growth",
+      destaque: true,
+    },
+    {
+      label: "Escala",
+      titulo: "Enterprise",
+      preco: "sob consulta",
+      periodo: "",
+      items: [
+        { destaque: "Verba a partir de R$ 100k/mes" },
+        { destaque: "Todas as plataformas Google" },
+        { destaque: "Time dedicado (gestor + analista)" },
+        { destaque: "BI customizado + dashboards ao vivo" },
+        { destaque: "Reunioes semanais + trimestrais" },
+        { destaque: "SLA de resposta em 2h uteis" },
+      ],
+      cta: "Falar com comercial",
+      destaque: false,
+    },
+  ];
   return (
-    <section><div className="container"><div className="section-eyebrow">Fit de cliente</div><h2 className="section-title">Somos pra <em>quem?</em></h2><p className="section-sub">Trabalhamos com transparencia — inclusive sobre quando somos ou nao a escolha certa. Antes de investir em anuncios, veja se seu momento bate.</p><div className="para-quem-grid">
-      <div className="quadro positivo"><div className="quadro-titulo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15"/><path d="M8 12L11 15L16 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>Vamos fazer barulho juntos se voce...</div><ul className="quadro-lista">
-        <li><svg className="marcador" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" fill="#0052FF"/></svg><span><strong>Ja tem produto ou servico validado</strong>, com clientes pagantes recorrentes</span></li>
-        <li><svg className="marcador" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" fill="#0052FF"/></svg><span><strong>Investe pelo menos R$ 5.000/mes</strong> em midia paga (nao e o nosso ticket, e o piso tecnico pro Google entregar dados)</span></li>
-        <li><svg className="marcador" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" fill="#0052FF"/></svg><span><strong>Quer escalar com dados</strong>, nao com achismo — aceita testar e cortar rapido o que nao funciona</span></li>
-        <li><svg className="marcador" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" fill="#0052FF"/></svg><span><strong>Estrutura de vendas responde bem</strong> — comercial atende leads, WhatsApp funciona, tem CRM basico</span></li>
-      </ul></div>
-      <div className="quadro"><div className="quadro-titulo" style={{ color: "#5A6379" }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#E4E7EF"/><path d="M15 9L9 15M9 9L15 15" stroke="#5A6379" strokeWidth="2" strokeLinecap="round"/></svg>Nao somos a escolha certa se...</div><ul className="quadro-lista">
-        <li><svg className="marcador" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" fill="#5A6379"/></svg><span>Espera <strong>resultado em 3-7 dias</strong> — Google Ads precisa de tempo pra otimizar (media 30-60 dias)</span></li>
-        <li><svg className="marcador" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" fill="#5A6379"/></svg><span>Ainda esta <strong>validando produto</strong> ou nao fez vendas organicas — o anuncio amplifica o que funciona, nao cria demanda do zero</span></li>
-        <li><svg className="marcador" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" fill="#5A6379"/></svg><span>Quer <strong>alguem que "so aperta botoes"</strong> — trabalhamos como socio da operacao, precisamos conversar sobre negocio</span></li>
-        <li><svg className="marcador" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" fill="#5A6379"/></svg><span>Vende produto/servico <strong>ilegal ou de nicho proibido</strong> pelas politicas do Google (cassinos, apostas offshore, etc)</span></li>
-      </ul></div>
-    </div></div></section>
+    <section className="servicos" id="servicos">
+      <div className="container">
+        <div className="servicos-titulo">
+          <div className="section-eyebrow">Servicos</div>
+          <h2 className="section-titulo">Um plano pra cada momento.</h2>
+          <p className="section-sub">Sem taxa de setup, sem letra miuda. Fidelidade minima de 90 dias — tempo que o Google precisa pra performar.</p>
+        </div>
+        <div className="servicos-grid">
+          {servicos.map((s) => (
+            <div className={`servico ${s.destaque ? 'destaque' : ''}`} key={s.titulo}>
+              <div className="servico-label">{s.label}</div>
+              <h3>{s.titulo}</h3>
+              <div className="servico-preco">
+                {s.preco !== "sob consulta" ? <><strong>R$ {s.preco}</strong>{s.periodo}</> : <strong style={{ fontSize: 24 }}>{s.preco}</strong>}
+              </div>
+              <ul>
+                {s.items.map((item, i) => (
+                  <li key={i}>
+                    <svg className="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>{item.destaque}</span>
+                  </li>
+                ))}
+              </ul>
+              <a href="#contato" className="servico-cta">{s.cta}</a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
-function Cases() {
-  const cases = [
-    { metrica: "R$ 2.1M", desc: "Faturamento em 6 meses", quote: "Trocamos 3 agencias antes de encontrar a GA. Diferenca de mundo — primeira que trata anuncio como investimento, nao como despesa fixa.", nome: "Juliano Marques", empresa: "E-commerce · Moda" },
-    { metrica: "487%", desc: "Crescimento em leads qualificados", quote: "Saimos de 40 leads/mes pra mais de 200, com custo por aquisicao menor. A auditoria inicial ja mostrou onde tava vazando dinheiro.", nome: "Renata Souza", empresa: "Odontologia · SP" },
-    { metrica: "3.2 meses", desc: "Payback da operacao inteira", quote: "O que gastamos com anuncio + honorario voltou em 3 meses. Depois disso, virou maquina de aquisicao. Ja duplicamos o investimento duas vezes.", nome: "Lucas Pereira", empresa: "SaaS B2B" }
+function Stats() {
+  return (
+    <section className="stats">
+      <div className="container">
+        <div className="stats-grid">
+          <div className="stat"><div className="stat-num">R$ <span>47M</span></div><div className="stat-label">Investidos em midia (12 meses)</div></div>
+          <div className="stat"><div className="stat-num"><span>4.2x</span></div><div className="stat-label">ROAS medio dos clientes ativos</div></div>
+          <div className="stat"><div className="stat-num"><span>120+</span></div><div className="stat-label">Empresas escalando com a gente</div></div>
+          <div className="stat"><div className="stat-num"><span>12</span>d</div><div className="stat-label">Ate a primeira otimizacao</div></div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Depoimentos() {
+  const deps = [
+    { texto: "Trocamos 3 agencias antes de encontrar a GA. Diferenca de mundo — primeira que trata anuncio como investimento, nao despesa fixa. ROAS subiu de 1.8 pra 4.1 em 2 meses.", nome: "Juliano Marques", cargo: "CEO · E-commerce moda" },
+    { texto: "Saimos de 40 leads/mes pra mais de 200, com CPA menor. A auditoria inicial ja mostrou onde tava vazando dinheiro. Foram diretos: cortaram 60% das campanhas velhas.", nome: "Renata Souza", cargo: "Diretora · Odontologia" },
+    { texto: "Ja duplicamos o investimento duas vezes esse ano. Cada real que colocamos volta em 3 meses. Report semanal e transparente — sem numero inventado, sem dashboard bonito e caixa vazio.", nome: "Lucas Pereira", cargo: "Fundador · SaaS B2B" },
   ];
   return (
-    <section className="cases"><div className="container"><div className="section-eyebrow">Cases reais</div><h2 className="section-title">Empresas que <em>escalaram</em> com a gente</h2><p className="section-sub">Nada de numeros inflados ou depoimentos genericos. Cada case abaixo e rastreavel — se quiser conferir, mostramos o dashboard.</p><div className="cases-grid">{cases.map((c, i) => (
-      <div className="case" key={i}><div className="case-metrica">{c.metrica}</div><div className="case-desc">{c.desc}</div><div className="case-quote">"{c.quote}"</div><div className="case-autor"><div className="case-avatar">{c.nome.split(' ').map(n => n[0]).join('')}</div><div className="case-info"><div className="case-nome">{c.nome}</div><div className="case-empresa">{c.empresa}</div></div></div></div>
-    ))}</div></div></section>
+    <section className="depoimentos">
+      <div className="container">
+        <div className="depoimentos-titulo">
+          <div className="section-eyebrow">Depoimentos</div>
+          <h2 className="section-titulo">Quem ja parou de queimar verba.</h2>
+          <p className="section-sub">Cada case abaixo e rastreavel. Quiser conferir dashboard, mostramos.</p>
+        </div>
+        <div className="depoimentos-grid">
+          {deps.map((d, i) => (
+            <div className="depoimento" key={i}>
+              <div className="depoimento-estrelas">★★★★★</div>
+              <p className="depoimento-texto">"{d.texto}"</p>
+              <div className="depoimento-autor">
+                <div className="autor-avatar">{d.nome.split(' ').map(n => n[0]).join('')}</div>
+                <div>
+                  <div className="autor-nome">{d.nome}</div>
+                  <div className="autor-cargo">{d.cargo}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
 function Faq() {
-  const [aberto, setAberto] = useState(0);
+  const [aberto, setAberto] = useState<number | null>(0);
   const perguntas = [
-    { q: "Quanto tempo ate ver resultado?", a: "Em geral 15 a 30 dias pros primeiros resultados consistentes. Google Ads precisa de dados pra otimizar — nas primeiras 2 semanas o algoritmo esta aprendendo. A partir do segundo mes, os numeros comecam a estabilizar e escalar." },
-    { q: "Qual o investimento minimo em anuncios?", a: "R$ 5.000/mes e o piso tecnico pra dar volume de dados suficiente pro Google otimizar. Abaixo disso os anuncios ficam ineficientes independente da agencia. O ideal e comecar com R$ 10-15k pra ter margem de teste." },
-    { q: "Voces cobram taxa fixa ou porcentagem sobre investimento?", a: "Taxa mensal fixa, independente do quanto voce investe em midia. Assim nosso incentivo esta alinhado: ganhamos mais quando voce escala, mas nao recebemos comissao por queimar orcamento. O valor depende da complexidade da operacao." },
-    { q: "Preciso ter site proprio ou voces fazem?", a: "Precisa ter uma pagina de conversao (site, landing page, ou loja). Se nao tiver, encaminhamos parceiros de confianca que fazem — mas nao fazemos internamente. Foco e 100% em trafego e midia paga." },
-    { q: "Trabalham com que segmentos?", a: "Todos os que geram vendas online: e-commerce, servicos locais, SaaS, educacao, saude (nicho legal), infoprodutos com historico. Nao trabalhamos com apostas, cripto de risco, ou produtos que violem politicas do Google." },
-    { q: "Existe contrato de fidelidade?", a: "Minimo de 90 dias — tempo necessario pro Google entregar performance. Depois disso, mensal. Se em qualquer momento voce quiser sair, sai. Sem multa, sem rescisao complicada." }
+    { q: "Quanto tempo ate ver resultado?", a: "15 a 30 dias pros primeiros resultados consistentes. Google Ads precisa de dados pra otimizar — nas primeiras 2 semanas o algoritmo esta aprendendo. A partir do segundo mes, numeros comecam a estabilizar e escalar." },
+    { q: "Qual investimento minimo em midia?", a: "R$ 5.000/mes e o piso tecnico pra dar volume de dados suficiente pro Google otimizar. Abaixo disso os anuncios ficam ineficientes independente da agencia. Ideal e comecar com R$ 10-15k pra ter margem de teste." },
+    { q: "Voces cobram taxa fixa ou % sobre midia?", a: "Taxa mensal fixa, independente do quanto voce investe em midia. Assim o incentivo esta alinhado: ganhamos mais quando voce escala, mas nao recebemos comissao por queimar orcamento." },
+    { q: "Preciso ter site proprio?", a: "Precisa ter uma pagina de conversao (site, LP, ou loja). Se nao tiver, encaminhamos parceiros que fazem. Nao fazemos internamente — foco 100% em trafego e midia." },
+    { q: "Trabalham com quais segmentos?", a: "Todos que geram vendas online: e-commerce, servicos locais, SaaS, educacao, saude (nicho legal), infoprodutos com historico. Nao trabalhamos com apostas, cripto de risco ou nichos proibidos pelo Google." },
+    { q: "Existe fidelidade?", a: "Minimo de 90 dias — tempo que o Google precisa pra performar. Depois disso, mensal sem multa. Se quiser sair, sai sem burocracia." },
   ];
   return (
-    <section><div className="container"><div className="section-eyebrow">FAQ</div><h2 className="section-title">Duvidas <em>frequentes</em></h2><p className="section-sub">Perguntas que aparecem toda semana na nossa DM. Se a sua nao estiver aqui, e so chamar.</p><div className="faq-lista">{perguntas.map((p, i) => (
-      <div className={`faq-item ${aberto === i ? 'aberto' : ''}`} key={i}><button className="faq-pergunta" onClick={() => setAberto(aberto === i ? null : i)}><span>{p.q}</span><svg className="faq-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 4V16M4 10H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg></button><div className="faq-resposta">{p.a}</div></div>
-    ))}</div></div></section>
+    <section id="faq">
+      <div className="container">
+        <div style={{ textAlign: 'center', marginBottom: 56 }}>
+          <div className="section-eyebrow">FAQ</div>
+          <h2 className="section-titulo" style={{ marginLeft: 'auto', marginRight: 'auto' }}>Duvidas frequentes</h2>
+        </div>
+        <div className="faq-lista">
+          {perguntas.map((p, i) => (
+            <div className={`faq-item ${aberto === i ? 'aberto' : ''}`} key={i}>
+              <button className="faq-pergunta" onClick={() => setAberto(aberto === i ? null : i)}>
+                <span>{p.q}</span>
+                <svg className="faq-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 4V16M4 10H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              </button>
+              <div className="faq-resposta">{p.a}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
 function CtaFinal() {
   return (
-    <div id="contato"><div className="cta-final"><h2>Pronto pra parar de <em>queimar verba?</em></h2><p>Analise gratuita da sua conta atual em ate 48h. Sem compromisso, sem venda forcada — se nao fizer sentido trabalharmos juntos, a gente fala.</p><a href="https://wa.me/5511999999999?text=Ola%2C%20quero%20uma%20analise%20gratuita" className="btn-primary" target="_blank" rel="noopener">Chamar no WhatsApp<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></a></div></div>
+    <section className="cta-final" id="contato">
+      <div className="container">
+        <h2>Sua proxima <span>campanha lucrativa</span> comeca agora.</h2>
+        <p>Analise gratuita da sua conta em ate 48h. Sem compromisso, sem venda forcada — se nao fizer sentido, a gente fala.</p>
+        <div className="cta-actions">
+          <a href="https://wa.me/5511999999999?text=Ola%2C%20vim%20do%20site%20e%20quero%20uma%20analise%20gratuita" target="_blank" rel="noopener" className="btn-primary">
+            Chamar no WhatsApp
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </a>
+          <a href="#servicos" className="btn-secondary">Ver planos</a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer>
+      <div className="container">
+        <div className="footer-inner">
+          <div className="footer-brand">
+            <div className="logo">
+              <span className="logo-badge">GA</span>
+              <span>Ativos</span>
+            </div>
+            <p className="footer-desc">Gestao de trafego pago em Google Ads focada em ROI real. Auditamos, estruturamos e escalamos.</p>
+          </div>
+          <div>
+            <h4>Servicos</h4>
+            <ul>
+              <li><a href="#servicos">Starter</a></li>
+              <li><a href="#servicos">Growth</a></li>
+              <li><a href="#servicos">Enterprise</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Empresa</h4>
+            <ul>
+              <li><a href="#beneficios">Beneficios</a></li>
+              <li><a href="#como-funciona">Como funciona</a></li>
+              <li><a href="#faq">FAQ</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Contato</h4>
+            <ul>
+              <li>contato@gaativos.com.br</li>
+              <li>Seg–Sex 9h–19h</li>
+            </ul>
+          </div>
+        </div>
+        <div className="footer-baixo">
+          <div>© 2026 GA Ativos · Gestao de trafego pago</div>
+          <div>Operacao etica · Sem promessa milagrosa</div>
+        </div>
+      </div>
+    </footer>
   );
 }
