@@ -137,9 +137,9 @@ export default function LandingPage() {
   );
 }
 
-function useContador(alvo, duracaoMs = 1800) {
+function useContador(alvo: number, duracaoMs: number = 1800) {
   const [valor, setValor] = useState(0);
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
   const iniciado = useRef(false);
   useEffect(() => {
     if (iniciado.current) return;
@@ -163,10 +163,10 @@ function useContador(alvo, duracaoMs = 1800) {
   return { valor, ref };
 }
 
-function Metrica({ valor, sufixo, prefixo, label, desc }) {
+function Metrica({ valor, sufixo, prefixo, label, desc }: { valor: number; sufixo?: string; prefixo?: string; label: string; desc: string }) {
   const { valor: contador, ref } = useContador(valor);
   return (
-    <div className="metrica" ref={ref}>
+    <div className="metrica" ref={ref as any}>
       <div className="metrica-numero">{prefixo && <span>{prefixo}</span>}{contador.toLocaleString('pt-BR')}{sufixo && <span>{sufixo}</span>}</div>
       <div className="metrica-label">{label}</div>
       <div className="metrica-desc">{desc}</div>
