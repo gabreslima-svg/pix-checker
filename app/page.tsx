@@ -37,6 +37,7 @@ export default function LandingPage() {
           -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
           letter-spacing: -0.03em;
         }
+        .logo-texto { color: var(--branco); font-weight: 700; letter-spacing: -0.02em; font-size: 20px; }
         .logo-a { background: linear-gradient(135deg, var(--google-blue), var(--google-green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 800; }
 
         .nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,10,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--cinza-borda); }
@@ -193,7 +194,7 @@ function Logo() {
   return (
     <div className="logo">
       <span className="logo-g"></span>
-      <span className="logo-a">ATIVOS</span>
+      <span className="logo-texto">G <span className="logo-a">ATIVOS</span></span>
     </div>
   );
 }

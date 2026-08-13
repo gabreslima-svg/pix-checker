@@ -2,8 +2,8 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "PIX Checker - Recuperador de Vendas",
-  description: "Consulta status de cobrancas PIX dinamicas direto no PSP",
+  title: 'G Ativos — Ativos para Google Ads',
+  description: 'Ativos criados um por um. Contas Google Ads verificadas, aquecidas e testadas. Entrega imediata no chat do pedido.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
