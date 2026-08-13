@@ -1,737 +1,544 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { parseBrCode } from "@/lib/brcode";
-import { supabase } from "@/lib/supabase";
+import { useState } from "react";
 
-type Cobranca = {
-  id: string;
-  brcode: string;
-  tipo: "dinamico" | "estatico" | "invalido";
-  url: string | null;
-  psp: string | null;
-  merchant_name: string | null;
-  txid: string | null;
-  status: string | null;
-  valor: string | null;
-  end_to_end_id: string | null;
-  horario_pagamento: string | null;
-  pagador_nome: string | null;
-  pagador_documento: string | null;
-  ultima_checagem: string | null;
-  erro: string | null;
-  observacao: string | null;
-  created_at: string;
-  mudanca_nao_vista: boolean;
-  polling_ativo: boolean;
-  polling_inicio: string | null;
-};
-
-type HistoricoItem = {
-  id: string;
-  cobranca_id: string;
-  status: string | null;
-  valor: string | null;
-  end_to_end_id: string | null;
-  horario_pagamento: string | null;
-  pagador_nome: string | null;
-  pagador_documento: string | null;
-  erro: string | null;
-  consultado_em: string;
-};
-
-const STATUS_LABELS: { [k: string]: string } = {
-  ATIVA: "ATIVA / pendente",
-  CONCLUIDA: "CONCLUIDA / paga",
-  REMOVIDA_PELO_USUARIO_RECEBEDOR: "removida pelo recebedor",
-  REMOVIDA_PELO_PSP: "removida pelo PSP",
-  REMOVIDA_PERMANENTE: "410 / removida permanentemente",
-  NAO_ENCONTRADA: "404 / nao encontrada",
-  AUTH_NECESSARIA: "auth necessaria",
-  PSP_FECHADO: "PSP fechado (401/403)",
-  PSP_INACESSIVEL: "PSP bloqueia consulta",
-};
-
-function extrairBrCodes(input: string): string[] {
-  const limpo = input.replace(/\s+/g, "");
-  const regex = /00020[0-9]\d{2,4}.*?6304[0-9A-Fa-f]{4}/g;
-  const matches = limpo.match(regex);
-  if (matches && matches.length > 0) return matches;
-  return input.split(/[\n\r]+/).map((l) => l.trim()).filter(Boolean);
-}
-
-function statusEfetivo(c: Cobranca): string | null {
-  if (c.end_to_end_id) return "CONCLUIDA";
-  return c.status;
-}
-
-function tempoDecorrido(inicio: string | null): string {
-  if (!inicio) return "—";
-  const min = Math.floor((Date.now() - new Date(inicio).getTime()) / 60000);
-  if (min < 1) return "agora";
-  if (min < 60) return min + "min";
-  const h = Math.floor(min / 60);
-  if (h < 24) return h + "h" + (min % 60 > 0 ? " " + (min % 60) + "m" : "");
-  return Math.floor(h / 24) + "d";
-}
-
-export default function Home() {
-  const [input, setInput] = useState("");
-  const [cobrancas, setCobrancas] = useState<Cobranca[]>([]);
-  const [filtroStatus, setFiltroStatus] = useState<string>("todos");
-  const [loading, setLoading] = useState(false);
-  const [checagemAtiva, setChecagemAtiva] = useState<string | null>(null);
-  const [msg, setMsg] = useState("");
-  const [historicoAberto, setHistoricoAberto] = useState<Cobranca | null>(null);
-  const [historico, setHistorico] = useState<HistoricoItem[]>([]);
-  const [copiado, setCopiado] = useState<string | null>(null);
-
-  async function carregar() {
-    const { data, error } = await supabase
-      .from("cobrancas")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(500);
-    if (!error && data) setCobrancas(data as Cobranca[]);
-  }
-
-  useEffect(() => {
-    carregar();
-    const interval = setInterval(carregar, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  async function copiarTexto(texto: string, identificador: string) {
-    try {
-      await navigator.clipboard.writeText(texto);
-      setCopiado(identificador);
-      setTimeout(() => setCopiado(null), 1500);
-    } catch {}
-  }
-
-  async function togglePolling(c: Cobranca) {
-    await supabase.from("cobrancas").update({
-      polling_ativo: !c.polling_ativo,
-      polling_inicio: !c.polling_ativo ? new Date().toISOString() : c.polling_inicio,
-    }).eq("id", c.id);
-    await carregar();
-  }
-
-  async function consultarPorId(id: string, url: string) {
-    try {
-      const { data: antes } = await supabase
-        .from("cobrancas")
-        .select("status, valor, end_to_end_id, horario_pagamento, pagador_nome, pagador_documento")
-        .eq("id", id)
-        .single();
-
-      const res = await fetch("/api/check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-      const data = await res.json();
-
-      const novoStatus = data.status || null;
-      const novoErro = data.ok ? null : data.erro || "Erro desconhecido";
-      const e2eFinal = data.endToEndId || antes?.end_to_end_id || null;
-      const horarioFinal = data.horario || antes?.horario_pagamento || null;
-      const nomeFinal = data.pagadorNome || antes?.pagador_nome || null;
-      const docFinal = data.pagadorDocumento || antes?.pagador_documento || null;
-      const valorFinal = data.valor || antes?.valor || null;
-      const mudou = !antes || antes.status !== novoStatus || antes.end_to_end_id !== e2eFinal;
-
-      await supabase.from("cobrancas").update({
-        status: novoStatus,
-        valor: valorFinal,
-        end_to_end_id: e2eFinal,
-        horario_pagamento: horarioFinal,
-        pagador_nome: nomeFinal,
-        pagador_documento: docFinal,
-        ultima_checagem: new Date().toISOString(),
-        erro: novoErro,
-        mudanca_nao_vista: mudou ? true : undefined,
-      }).eq("id", id);
-
-      await supabase.from("cobrancas_historico").insert({
-        cobranca_id: id,
-        status: novoStatus,
-        valor: data.valor || null,
-        end_to_end_id: data.endToEndId || null,
-        horario_pagamento: data.horario || null,
-        pagador_nome: data.pagadorNome || null,
-        pagador_documento: data.pagadorDocumento || null,
-        erro: novoErro,
-      });
-    } catch (e: any) {
-      await supabase.from("cobrancas").update({
-        ultima_checagem: new Date().toISOString(),
-        erro: e?.message || "Erro na chamada",
-      }).eq("id", id);
-    }
-  }
-
-  async function adicionar() {
-    if (!input.trim()) return;
-    setLoading(true);
-    setMsg("");
-
-    const linhas = extrairBrCodes(input);
-    let dinamicosNovos = 0, estaticosNovos = 0, invalidos = 0, duplicados = 0;
-    const idsParaConsultar: { id: string; url: string }[] = [];
-
-    for (const linha of linhas) {
-      const parsed = parseBrCode(linha);
-
-      const { data: existente } = await supabase
-        .from("cobrancas")
-        .select("id, tipo, url")
-        .eq("brcode", linha)
-        .maybeSingle();
-
-      if (existente) {
-        duplicados++;
-        await supabase.from("cobrancas").update({
-          polling_ativo: true,
-          polling_inicio: new Date().toISOString(),
-        }).eq("id", existente.id);
-        if (existente.tipo === "dinamico" && existente.url) {
-          idsParaConsultar.push({ id: existente.id, url: existente.url });
+export default function LandingPage() {
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
+        :root {
+          --bg: #0a0a0a; --bg-2: #111111; --bg-3: #171717;
+          --azul: #4285F4; --azul-claro: #5B9BFF; --azul-glow: rgba(66,133,244,0.18);
+          --google-red: #EA4335; --google-yellow: #FBBC04; --google-green: #34A853; --google-blue: #4285F4;
+          --branco: #FFFFFF; --cinza-1: #A3A3A3; --cinza-2: #737373; --cinza-borda: #262626;
+          --sans: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', monospace;
         }
-        continue;
-      }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: var(--sans); color: var(--branco); background: var(--bg); -webkit-font-smoothing: antialiased; line-height: 1.5; }
+        a { color: inherit; text-decoration: none; }
+        button { cursor: pointer; font-family: inherit; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 
-      if (parsed.tipo === "estatico") {
-        estaticosNovos++;
-        await supabase.from("cobrancas").insert({
-          brcode: linha,
-          tipo: "estatico",
-          merchant_name: parsed.merchantName,
-          observacao: "Estatico: nao da pra consultar status",
-          polling_ativo: false,
-        });
-        continue;
-      }
+        .logo { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+        .logo-g {
+          width: 36px; height: 36px; border-radius: 50%;
+          background: conic-gradient(from -45deg, var(--google-blue) 0deg 90deg, var(--google-green) 90deg 180deg, var(--google-yellow) 180deg 270deg, var(--google-red) 270deg 360deg);
+          display: flex; align-items: center; justify-content: center;
+          position: relative;
+          box-shadow: 0 0 20px rgba(66,133,244,0.25);
+        }
+        .logo-g::before { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: var(--bg); }
+        .logo-g::after {
+          content: 'G'; position: relative; z-index: 1;
+          font-family: 'Inter', sans-serif; font-weight: 700; font-size: 20px;
+          background: linear-gradient(135deg, var(--google-blue) 0%, var(--google-green) 33%, var(--google-yellow) 66%, var(--google-red) 100%);
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+          letter-spacing: -0.03em;
+        }
+        .logo-a { background: linear-gradient(135deg, var(--google-blue), var(--google-green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 800; }
 
-      if (parsed.tipo === "invalido") {
-        invalidos++;
-        continue;
-      }
+        .nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,10,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--cinza-borda); }
+        .nav-inner { display: flex; justify-content: space-between; align-items: center; height: 72px; }
+        .nav-links { display: flex; gap: 32px; font-size: 14px; color: var(--cinza-1); font-weight: 500; }
+        .nav-links a:hover { color: var(--branco); }
+        .nav-cta { background: var(--azul); color: var(--branco); padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        .nav-cta:hover { background: var(--azul-claro); transform: translateY(-1px); }
+        @media (max-width: 768px) { .nav-links { display: none; } }
 
-      dinamicosNovos++;
-      const { data } = await supabase.from("cobrancas").insert({
-        brcode: linha,
-        tipo: "dinamico",
-        url: parsed.url,
-        psp: parsed.psp,
-        merchant_name: parsed.merchantName,
-        txid: parsed.txid,
-        polling_ativo: true,
-        polling_inicio: new Date().toISOString(),
-      }).select("id").single();
+        .hero { padding: 100px 0 80px; position: relative; overflow: hidden; text-align: center; }
+        .hero::before { content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 900px; height: 500px; background: radial-gradient(ellipse, var(--azul-glow) 0%, transparent 60%); pointer-events: none; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; border: 1px solid var(--cinza-borda); background: var(--bg-2); border-radius: 999px; font-size: 12px; color: var(--cinza-1); margin-bottom: 40px; position: relative; z-index: 1; font-weight: 500; }
+        .hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #10B981; box-shadow: 0 0 8px #10B981; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .hero h1 { font-size: clamp(46px, 7.5vw, 88px); font-weight: 800; line-height: 0.98; letter-spacing: -0.04em; margin-bottom: 32px; max-width: 950px; margin-left: auto; margin-right: auto; position: relative; z-index: 1; }
+        .hero h1 .grad { background: linear-gradient(135deg, var(--google-blue) 0%, var(--google-green) 50%, var(--google-yellow) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero-sub { font-size: 19px; color: var(--cinza-1); max-width: 640px; margin: 0 auto 48px; line-height: 1.55; position: relative; z-index: 1; }
+        .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 80px; position: relative; z-index: 1; }
+        .btn-primary { background: var(--azul); color: var(--branco); padding: 16px 32px; border-radius: 10px; font-size: 15px; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; box-shadow: 0 4px 20px rgba(66,133,244,0.3); }
+        .btn-primary:hover { background: var(--azul-claro); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(66,133,244,0.4); }
+        .btn-secondary { background: var(--bg-2); color: var(--branco); padding: 16px 32px; border-radius: 10px; font-size: 15px; font-weight: 600; border: 1px solid var(--cinza-borda); transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-secondary:hover { border-color: var(--azul); background: var(--bg-3); }
 
-      if (data?.id && parsed.url) {
-        idsParaConsultar.push({ id: data.id, url: parsed.url });
-      }
-    }
+        .pilares { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; max-width: 720px; margin: 0 auto; position: relative; z-index: 1; }
+        .pilar { text-align: center; padding: 24px; border-right: 1px solid var(--cinza-borda); }
+        .pilar:last-child { border-right: none; }
+        .pilar-num { font-size: 26px; font-weight: 700; color: var(--branco); line-height: 1; margin-bottom: 8px; letter-spacing: -0.02em; }
+        .pilar-label { font-size: 12px; color: var(--cinza-1); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; }
+        @media (max-width: 640px) { .pilares { grid-template-columns: 1fr; } .pilar { border-right: none; border-bottom: 1px solid var(--cinza-borda); } .pilar:last-child { border-bottom: none; } }
 
-    const partes: string[] = [];
-    const novos = dinamicosNovos + estaticosNovos;
-    if (novos > 0) partes.push(novos + " novo(s)");
-    if (duplicados > 0) partes.push(duplicados + " duplicado(s) reativado(s)");
-    if (invalidos > 0) partes.push(invalidos + " invalido(s) ignorado(s)");
+        section { padding: 100px 0; position: relative; }
+        .section-eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--azul-claro); font-weight: 600; margin-bottom: 16px; }
+        .section-titulo { font-size: clamp(36px, 5vw, 56px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 24px; max-width: 720px; }
+        .section-sub { font-size: 18px; color: var(--cinza-1); max-width: 620px; margin-bottom: 56px; line-height: 1.55; }
 
-    setMsg(linhas.length + " encontrado(s): " + (partes.join(", ") || "nada"));
-    setInput("");
-    await carregar();
+        .beneficios { background: var(--bg-2); border-top: 1px solid var(--cinza-borda); border-bottom: 1px solid var(--cinza-borda); }
+        .beneficios-header { text-align: center; margin-bottom: 64px; }
+        .beneficios-header .section-titulo, .beneficios-header .section-sub { margin-left: auto; margin-right: auto; }
+        .beneficios-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+        .beneficio { padding: 32px 24px; background: var(--bg-3); border: 1px solid var(--cinza-borda); border-radius: 16px; transition: all 0.3s; }
+        .beneficio:hover { border-color: var(--azul); transform: translateY(-4px); }
+        .beneficio-icone { width: 44px; height: 44px; background: rgba(66,133,244,0.1); border: 1px solid rgba(66,133,244,0.3); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: var(--azul-claro); }
+        .beneficio h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em; }
+        .beneficio p { font-size: 14px; color: var(--cinza-1); line-height: 1.55; }
+        @media (max-width: 768px) { .beneficios-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 480px) { .beneficios-grid { grid-template-columns: 1fr; } }
 
-    if (idsParaConsultar.length > 0) {
-      for (let i = 0; i < idsParaConsultar.length; i++) {
-        const item = idsParaConsultar[i];
-        setMsg("consultando " + (i + 1) + " de " + idsParaConsultar.length + "...");
-        await consultarPorId(item.id, item.url);
-      }
-      await carregar();
-      setMsg(linhas.length + " encontrado(s) - polling automatico ativado");
-    }
+        .passos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 60px; }
+        .passo { padding: 32px 24px; background: var(--bg-2); border: 1px solid var(--cinza-borda); border-radius: 16px; position: relative; transition: all 0.3s; text-align: left; }
+        .passo:hover { border-color: var(--azul); background: var(--bg-3); }
+        .passo-numero { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--azul-claro); margin-bottom: 24px; display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; background: rgba(66,133,244,0.1); border: 1px solid rgba(66,133,244,0.3); border-radius: 999px; }
+        .passo h3 { font-size: 20px; font-weight: 700; margin-bottom: 12px; letter-spacing: -0.02em; }
+        .passo p { font-size: 14px; color: var(--cinza-1); line-height: 1.55; }
+        @media (max-width: 900px) { .passos-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 480px) { .passos-grid { grid-template-columns: 1fr; } }
 
-    setLoading(false);
-  }
+        .catalogo { background: var(--bg-2); border-top: 1px solid var(--cinza-borda); border-bottom: 1px solid var(--cinza-borda); }
+        .catalogo-titulo { text-align: center; margin-bottom: 64px; }
+        .catalogo-titulo .section-titulo, .catalogo-titulo .section-sub { margin-left: auto; margin-right: auto; }
+        .catalogo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .ativo { padding: 32px; background: var(--bg-3); border: 1px solid var(--cinza-borda); border-radius: 20px; transition: all 0.3s; display: flex; flex-direction: column; }
+        .ativo:hover { border-color: var(--azul); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(66,133,244,0.08); }
+        .ativo.destaque { background: linear-gradient(180deg, rgba(66,133,244,0.08) 0%, var(--bg-3) 100%); border-color: rgba(66,133,244,0.4); position: relative; }
+        .ativo.destaque::before { content: 'MAIS PROCURADO'; position: absolute; top: 20px; right: 20px; background: var(--azul); padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; }
+        .ativo-tag { font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--azul-claro); font-weight: 600; margin-bottom: 12px; }
+        .ativo h3 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+        .ativo-desc { font-size: 13px; color: var(--cinza-1); margin-bottom: 24px; }
+        .ativo-preco-box { padding: 16px; background: var(--bg); border: 1px solid var(--cinza-borda); border-radius: 12px; margin-bottom: 20px; }
+        .ativo-preco { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
+        .ativo-preco-antigo { font-size: 13px; color: var(--cinza-2); text-decoration: line-through; }
+        .ativo-preco strong { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+        .ativo-preco-info { font-size: 11px; color: var(--cinza-1); }
+        .ativo-estoque { font-size: 11px; color: #10B981; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+        .ativo-estoque::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #10B981; }
+        .ativo ul { list-style: none; margin-bottom: 24px; flex: 1; }
+        .ativo li { padding: 8px 0; font-size: 13px; color: var(--cinza-1); display: flex; align-items: flex-start; gap: 10px; }
+        .ativo li strong { color: var(--branco); font-weight: 600; }
+        .check-icon { color: var(--azul-claro); flex-shrink: 0; margin-top: 2px; }
+        .ativo-cta { display: block; text-align: center; padding: 14px; background: var(--bg); border: 1px solid var(--cinza-borda); border-radius: 10px; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        .ativo-cta:hover { background: var(--azul); border-color: var(--azul); }
+        .ativo.destaque .ativo-cta { background: var(--azul); border-color: var(--azul); }
+        .ativo.destaque .ativo-cta:hover { background: var(--azul-claro); }
+        @media (max-width: 900px) { .catalogo-grid { grid-template-columns: 1fr; } }
 
-  async function verificarUma(c: Cobranca) {
-    if (c.tipo !== "dinamico" || !c.url) return;
-    setChecagemAtiva(c.id);
-    try {
-      await consultarPorId(c.id, c.url);
-      await carregar();
-    } finally {
-      setChecagemAtiva(null);
-    }
-  }
+        .stats { background: var(--bg); }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding: 60px 0; border-top: 1px solid var(--cinza-borda); border-bottom: 1px solid var(--cinza-borda); }
+        .stat { text-align: center; }
+        .stat-num { font-size: 44px; font-weight: 800; letter-spacing: -0.03em; color: var(--branco); line-height: 1; margin-bottom: 12px; }
+        .stat-num span { background: linear-gradient(135deg, var(--google-blue), var(--google-green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .stat-label { font-size: 13px; color: var(--cinza-1); }
+        @media (max-width: 768px) { .stats-grid { grid-template-columns: 1fr 1fr; gap: 32px; } }
 
-  async function verificarTodas() {
-    const aVerificar = cobrancas.filter((c) => c.tipo === "dinamico" && c.url);
-    setLoading(true);
-    for (let i = 0; i < aVerificar.length; i++) {
-      const c = aVerificar[i];
-      setMsg("re-consultando " + (i + 1) + " de " + aVerificar.length + "...");
-      await consultarPorId(c.id, c.url!);
-    }
-    setMsg(aVerificar.length + " consultada(s)");
-    await carregar();
-    setLoading(false);
-  }
+        .depoimentos { padding: 100px 0; }
+        .depoimentos-titulo { text-align: center; margin-bottom: 64px; }
+        .depoimentos-titulo .section-titulo, .depoimentos-titulo .section-sub { margin-left: auto; margin-right: auto; }
+        .depoimentos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .depoimento { padding: 32px; background: var(--bg-2); border: 1px solid var(--cinza-borda); border-radius: 16px; }
+        .depoimento-estrelas { color: #FBBF24; margin-bottom: 16px; font-size: 16px; letter-spacing: 2px; }
+        .depoimento-texto { font-size: 15px; line-height: 1.6; color: var(--cinza-1); margin-bottom: 24px; }
+        .depoimento-autor { display: flex; align-items: center; gap: 12px; padding-top: 20px; border-top: 1px solid var(--cinza-borda); }
+        .autor-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--google-blue), var(--google-green)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--branco); }
+        .autor-nome { font-size: 14px; font-weight: 600; }
+        .autor-cargo { font-size: 12px; color: var(--cinza-1); }
+        @media (max-width: 900px) { .depoimentos-grid { grid-template-columns: 1fr; } }
 
-  async function remover(id: string) {
-    await supabase.from("cobrancas").delete().eq("id", id);
-    await carregar();
-  }
+        .faq-lista { max-width: 800px; margin: 0 auto; }
+        .faq-item { border: 1px solid var(--cinza-borda); border-radius: 12px; margin-bottom: 12px; background: var(--bg-2); transition: border 0.2s; }
+        .faq-item.aberto { border-color: var(--azul); }
+        .faq-pergunta { width: 100%; background: none; border: none; padding: 20px 24px; text-align: left; font-size: 16px; font-weight: 600; color: var(--branco); display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+        .faq-icon { flex-shrink: 0; transition: transform 0.2s; color: var(--azul-claro); }
+        .faq-item.aberto .faq-icon { transform: rotate(45deg); }
+        .faq-resposta { max-height: 0; overflow: hidden; transition: max-height 0.3s, padding 0.3s; font-size: 14px; color: var(--cinza-1); line-height: 1.6; padding: 0 24px; }
+        .faq-item.aberto .faq-resposta { max-height: 500px; padding: 0 24px 24px; }
 
-  async function limparInvalidos() {
-    if (!confirm("Remover todos os registros invalidos da tabela?")) return;
-    await supabase.from("cobrancas").delete().eq("tipo", "invalido");
-    await carregar();
-  }
+        .cta-final { background: linear-gradient(180deg, var(--bg) 0%, rgba(66,133,244,0.05) 100%); padding: 100px 0 120px; text-align: center; border-top: 1px solid var(--cinza-borda); position: relative; overflow: hidden; }
+        .cta-final::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 900px; height: 500px; background: radial-gradient(ellipse, var(--azul-glow) 0%, transparent 60%); pointer-events: none; }
+        .cta-final > * { position: relative; z-index: 1; }
+        .cta-final h2 { font-size: clamp(36px, 6vw, 64px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 24px; max-width: 750px; margin-left: auto; margin-right: auto; }
+        .cta-final h2 .grad { background: linear-gradient(135deg, var(--google-blue), var(--google-green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .cta-final p { font-size: 18px; color: var(--cinza-1); margin-bottom: 40px; max-width: 560px; margin-left: auto; margin-right: auto; }
+        .cta-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 
-  async function abrirHistorico(c: Cobranca) {
-    setHistoricoAberto(c);
-    const { data } = await supabase
-      .from("cobrancas_historico")
-      .select("*")
-      .eq("cobranca_id", c.id)
-      .order("consultado_em", { ascending: false });
-    setHistorico((data as HistoricoItem[]) || []);
+        footer { padding: 60px 0 40px; border-top: 1px solid var(--cinza-borda); background: var(--bg); }
+        .footer-inner { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+        .footer-brand { max-width: 320px; }
+        .footer-desc { color: var(--cinza-1); font-size: 13px; margin-top: 16px; line-height: 1.55; }
+        .footer h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--cinza-1); margin-bottom: 16px; font-weight: 600; }
+        .footer ul { list-style: none; }
+        .footer li { margin-bottom: 8px; font-size: 14px; color: var(--branco); }
+        .footer li a:hover { color: var(--azul-claro); }
+        .footer-baixo { padding-top: 32px; border-top: 1px solid var(--cinza-borda); display: flex; justify-content: space-between; font-size: 12px; color: var(--cinza-1); flex-wrap: wrap; gap: 12px; }
+        @media (max-width: 768px) { .footer-inner { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 480px) { .footer-inner { grid-template-columns: 1fr; } }
 
-    if (c.mudanca_nao_vista) {
-      await supabase.from("cobrancas").update({ mudanca_nao_vista: false }).eq("id", c.id);
-      await carregar();
-    }
-  }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+      `}</style>
 
-  function fecharHistorico() {
-    setHistoricoAberto(null);
-    setHistorico([]);
-  }
-
-  const ordenadas = [...cobrancas].sort((a, b) => {
-    const aT = a.ultima_checagem ? new Date(a.ultima_checagem).getTime() : 0;
-    const bT = b.ultima_checagem ? new Date(b.ultima_checagem).getTime() : 0;
-    if (aT === 0 && bT === 0) {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    }
-    if (aT === 0) return 1;
-    if (bT === 0) return -1;
-    return bT - aT;
-  });
-
-  const exibidas = filtroStatus === "todos"
-    ? ordenadas
-    : filtroStatus === "polling_ativo"
-    ? ordenadas.filter((c) => c.polling_ativo && c.tipo === "dinamico")
-    : filtroStatus === "com_mudanca"
-    ? ordenadas.filter((c) => c.mudanca_nao_vista)
-    : filtroStatus === "nao_consultados"
-    ? ordenadas.filter((c) => !c.status && c.tipo === "dinamico")
-    : filtroStatus === "estaticos"
-    ? ordenadas.filter((c) => c.tipo === "estatico")
-    : filtroStatus === "invalidos"
-    ? ordenadas.filter((c) => c.tipo === "invalido")
-    : ordenadas.filter((c) => statusEfetivo(c) === filtroStatus);
-
-  const totais = {
-    total: cobrancas.length,
-    pollingAtivo: cobrancas.filter((c) => c.polling_ativo && c.tipo === "dinamico").length,
-    pagas: cobrancas.filter((c) => statusEfetivo(c) === "CONCLUIDA").length,
-    pendentes: cobrancas.filter((c) => statusEfetivo(c) === "ATIVA").length,
-    removidas: cobrancas.filter((c) => {
-      const s = statusEfetivo(c);
-      return s && s.startsWith("REMOVIDA");
-    }).length,
-    comMudanca: cobrancas.filter((c) => c.mudanca_nao_vista).length,
-    invalidas: cobrancas.filter((c) => c.tipo === "invalido").length,
-  };
-
-  return (
-    <main style={styles.main}>
-      <div style={styles.container}>
-        <header style={styles.header}>
-          <div>
-            <div style={styles.logo}>
-              <span style={styles.logoDot}>●</span> PIX<span style={styles.logoAccent}>CHECKER</span>
-            </div>
-            <p style={styles.tagline}>
-              <span style={styles.taglineSerif}>recupere </span>
-              vendas pagas que o webhook nao entregou - polling automatico a cada 2 min
-            </p>
-          </div>
-          <div style={styles.stats}>
-            <Stat label="total" value={totais.total} />
-            <Stat label="polling" value={totais.pollingAtivo} color="var(--accent)" />
-            <Stat label="pendentes" value={totais.pendentes} color="var(--yellow)" />
-            <Stat label="pagas" value={totais.pagas} color="var(--green)" />
-            <Stat label="removidas" value={totais.removidas} color="var(--red)" />
-            <Stat label="mudaram" value={totais.comMudanca} color="var(--accent)" />
-          </div>
-        </header>
-
-        <section style={styles.card}>
-          <div style={styles.cardHeader}>
-            <span style={styles.cardLabel}>01 - adicionar e consultar BR Codes</span>
-            <span style={styles.cardHelp}>cola assim que gerar - polling captura o E2E sozinho</span>
-          </div>
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="cola um ou mais BR Codes aqui"
-            style={styles.textarea}
-            rows={5}
-          />
-          <div style={styles.actions}>
-            <button onClick={adicionar} disabled={loading || !input.trim()} style={{ ...styles.btn, ...styles.btnPrimary }}>
-              {loading ? "processando..." : "adicionar e iniciar polling"}
-            </button>
-            {msg && <span style={styles.msg}>{msg}</span>}
-          </div>
-        </section>
-
-        <section style={styles.card}>
-          <div style={styles.cardHeader}>
-            <span style={styles.cardLabel}>02 - lista de cobrancas</span>
-            <div style={styles.cardActions}>
-              <select value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)} style={styles.select}>
-                <option value="todos">todos</option>
-                <option value="polling_ativo">com polling ativo</option>
-                <option value="com_mudanca">apenas com mudanca</option>
-                <option value="nao_consultados">nao consultados</option>
-                <option value="ATIVA">ATIVA / pendente</option>
-                <option value="CONCLUIDA">CONCLUIDA / paga</option>
-                <option value="REMOVIDA_PERMANENTE">removida permanente (410)</option>
-                <option value="REMOVIDA_PELO_USUARIO_RECEBEDOR">removida pelo recebedor</option>
-                <option value="REMOVIDA_PELO_PSP">removida pelo PSP</option>
-                <option value="NAO_ENCONTRADA">nao encontrada (404)</option>
-                <option value="PSP_FECHADO">PSP fechado</option>
-                <option value="PSP_INACESSIVEL">PSP inacessivel</option>
-                <option value="estaticos">apenas estaticos</option>
-                <option value="invalidos">apenas invalidos</option>
-              </select>
-              {totais.invalidas > 0 && (
-                <button onClick={limparInvalidos} style={{ ...styles.btn, ...styles.btnGhost }}>
-                  limpar invalidos ({totais.invalidas})
-                </button>
-              )}
-              <button onClick={verificarTodas} disabled={loading} style={{ ...styles.btn, ...styles.btnSecondary }}>
-                re-consultar todas
-              </button>
-            </div>
-          </div>
-
-          {exibidas.length === 0 ? (
-            <div style={styles.empty}>
-              <span style={styles.emptyText}>
-                {cobrancas.length === 0 ? "nenhuma cobranca ainda" : "nenhuma cobranca nesse filtro"}
-              </span>
-            </div>
-          ) : (
-            <div style={styles.table}>
-              <div style={styles.tableHead}>
-                <div style={{ flex: "0 0 28px" }}></div>
-                <div style={{ flex: "0 0 80px" }}>tipo</div>
-                <div style={{ flex: "1 1 130px" }}>PSP</div>
-                <div style={{ flex: "1 1 160px" }}>merchant / txid</div>
-                <div style={{ flex: "0 0 90px" }}>valor</div>
-                <div style={{ flex: "0 0 180px" }}>status</div>
-                <div style={{ flex: "1 1 220px" }}>E2E / pagador</div>
-                <div style={{ flex: "0 0 100px" }}>polling</div>
-                <div style={{ flex: "0 0 130px" }}>acao</div>
-              </div>
-              {exibidas.map((c) => (
-                <CobrancaRow
-                  key={c.id}
-                  c={c}
-                  verificando={checagemAtiva === c.id}
-                  copiado={copiado}
-                  onVerificar={() => verificarUma(c)}
-                  onRemover={() => remover(c.id)}
-                  onHistorico={() => abrirHistorico(c)}
-                  onCopiar={copiarTexto}
-                  onTogglePolling={() => togglePolling(c)}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-
-        {historicoAberto && (
-          <HistoricoModal
-            cobranca={historicoAberto}
-            historico={historico}
-            onClose={fecharHistorico}
-            onCopiar={copiarTexto}
-            copiado={copiado}
-          />
-        )}
-
-        <footer style={styles.footer}>
-          <span>consulta direta no endpoint publico do PSP - polling automatico via Vercel Cron</span>
-        </footer>
-      </div>
-    </main>
+      <Nav />
+      <Hero />
+      <Beneficios />
+      <ComoFunciona />
+      <Catalogo />
+      <Stats />
+      <Depoimentos />
+      <Faq />
+      <CtaFinal />
+      <Footer />
+    </>
   );
 }
 
-function Stat({ label, value, color, dim }: { label: string; value: number; color?: string; dim?: boolean }) {
+function Logo() {
   return (
-    <div style={styles.statBox}>
-      <div style={{ ...styles.statValue, color: color || (dim ? "var(--text-faint)" : "var(--text)") }}>{value}</div>
-      <div style={styles.statLabel}>{label}</div>
+    <div className="logo">
+      <span className="logo-g"></span>
+      <span className="logo-a">ATIVOS</span>
     </div>
   );
 }
 
-function CopyButton({ texto, identificador, copiado, onCopiar }: {
-  texto: string; identificador: string; copiado: string | null; onCopiar: (t: string, id: string) => void;
-}) {
-  const ativo = copiado === identificador;
+function Nav() {
   return (
-    <button onClick={() => onCopiar(texto, identificador)} style={{ ...styles.copyBtn, color: ativo ? "var(--green)" : "var(--text-faint)" }} title="copiar">
-      {ativo ? "OK" : "copy"}
-    </button>
-  );
-}
-
-function CobrancaRow({
-  c, verificando, copiado, onVerificar, onRemover, onHistorico, onCopiar, onTogglePolling,
-}: {
-  c: Cobranca; verificando: boolean; copiado: string | null;
-  onVerificar: () => void; onRemover: () => void; onHistorico: () => void;
-  onCopiar: (t: string, id: string) => void;
-  onTogglePolling: () => void;
-}) {
-  const statusEfet = statusEfetivo(c);
-  const mostraDivergencia = c.end_to_end_id && c.status && c.status !== "CONCLUIDA";
-
-  const statusColor =
-    statusEfet === "CONCLUIDA" ? "var(--green)" :
-    statusEfet === "ATIVA" ? "var(--yellow)" :
-    statusEfet && statusEfet.startsWith("REMOVIDA") ? "var(--red)" :
-    statusEfet === "NAO_ENCONTRADA" ? "var(--text-faint)" :
-    statusEfet === "AUTH_NECESSARIA" || statusEfet === "PSP_FECHADO" || statusEfet === "PSP_INACESSIVEL" ? "#ff9b3d" :
-    "var(--text-faint)";
-
-  const tipoStyle =
-    c.tipo === "dinamico" ? { bg: "rgba(46, 230, 141, 0.1)", fg: "var(--green)" } :
-    c.tipo === "estatico" ? { bg: "rgba(245, 197, 66, 0.1)", fg: "var(--yellow)" } :
-    { bg: "rgba(255, 90, 90, 0.1)", fg: "var(--red)" };
-
-  const statusLabel = statusEfet ? (STATUS_LABELS[statusEfet] || statusEfet) : null;
-
-  return (
-    <div style={{ ...styles.tableRow, background: statusEfet === "CONCLUIDA" ? "rgba(46, 230, 141, 0.05)" : undefined }}>
-      <div style={{ flex: "0 0 28px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {c.mudanca_nao_vista && <span style={styles.bolinhaAmarela} title="mudou na ultima consulta"></span>}
-      </div>
-      <div style={{ flex: "0 0 80px" }}>
-        <span style={{ ...styles.tipoBadge, background: tipoStyle.bg, color: tipoStyle.fg }}>{c.tipo}</span>
-      </div>
-      <div style={{ flex: "1 1 130px", ...styles.cellDim }}>{c.psp || "-"}</div>
-      <div style={{ flex: "1 1 160px", overflow: "hidden" }}>
-        <div style={styles.cellMain}>{c.merchant_name || "-"}</div>
-        <div style={styles.cellSub}>{c.txid || c.erro || "-"}</div>
-      </div>
-      <div style={{ flex: "0 0 90px" }}>{c.valor ? "R$ " + c.valor : <span style={styles.cellFaint}>-</span>}</div>
-      <div style={{ flex: "0 0 180px" }}>
-        {statusLabel ? <span style={{ color: statusColor, fontWeight: 500 }}>{statusLabel}</span> : <span style={styles.cellFaint}>nao consultado</span>}
-        {mostraDivergencia && (
-          <div style={styles.statusDivergencia}>PSP agora: {STATUS_LABELS[c.status!] || c.status}</div>
-        )}
-      </div>
-      <div style={{ flex: "1 1 220px", overflow: "hidden" }}>
-        {c.end_to_end_id ? (
-          <>
-            <div style={styles.e2eCell}>
-              <code style={styles.e2eCode}>{c.end_to_end_id}</code>
-              <CopyButton texto={c.end_to_end_id} identificador={"e2e-" + c.id} copiado={copiado} onCopiar={onCopiar} />
-            </div>
-            {(c.pagador_nome || c.pagador_documento) && (
-              <div style={styles.pagadorInfo}>
-                {c.pagador_nome && <span>{c.pagador_nome}</span>}
-                {c.pagador_nome && c.pagador_documento && <span> - </span>}
-                {c.pagador_documento && <span>{c.pagador_documento}</span>}
-              </div>
-            )}
-          </>
-        ) : (
-          <span style={styles.cellFaint}>-</span>
-        )}
-      </div>
-      <div style={{ flex: "0 0 100px", fontSize: 11 }}>
-        {c.tipo === "dinamico" ? (
-          c.polling_ativo ? (
-            <div>
-              <span style={styles.pollingAtivo}>ativo</span>
-              <div style={styles.pollingTempo}>{tempoDecorrido(c.polling_inicio)}</div>
-            </div>
-          ) : (
-            <span style={styles.pollingInativo}>pausado</span>
-          )
-        ) : (
-          <span style={styles.cellFaint}>-</span>
-        )}
-      </div>
-      <div style={{ flex: "0 0 130px", display: "flex", gap: 4 }}>
-        <button onClick={onHistorico} style={{ ...styles.btnSmall, ...styles.btnGhost }} title="historico">H</button>
-        {c.tipo === "dinamico" && (
-          <>
-            <button onClick={onTogglePolling} style={{ ...styles.btnSmall, ...styles.btnGhost }} title={c.polling_ativo ? "pausar polling" : "retomar polling"}>
-              {c.polling_ativo ? "P" : "R"}
-            </button>
-            <button onClick={onVerificar} disabled={verificando} style={{ ...styles.btnSmall, ...styles.btnPrimary }} title="consultar agora">
-              {verificando ? "..." : "C"}
-            </button>
-          </>
-        )}
-        <button onClick={onRemover} style={{ ...styles.btnSmall, ...styles.btnGhost }}>X</button>
-      </div>
-    </div>
-  );
-}
-
-function HistoricoModal({
-  cobranca, historico, onClose, onCopiar, copiado,
-}: {
-  cobranca: Cobranca; historico: HistoricoItem[]; onClose: () => void;
-  onCopiar: (t: string, id: string) => void; copiado: string | null;
-}) {
-  return (
-    <div style={styles.modalBackdrop} onClick={onClose}>
-      <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div style={styles.modalHeader}>
-          <div>
-            <div style={styles.modalTitle}>historico de consultas</div>
-            <div style={styles.modalSubtitle}>{cobranca.merchant_name} - {cobranca.txid || "-"}</div>
-            {cobranca.end_to_end_id && (
-              <div style={styles.modalConfirmado}>pagamento confirmado - E2E capturado</div>
-            )}
-          </div>
-          <button onClick={onClose} style={styles.modalClose}>X</button>
+    <nav className="nav">
+      <div className="container nav-inner">
+        <a href="#"><Logo /></a>
+        <div className="nav-links">
+          <a href="#beneficios">Benefícios</a>
+          <a href="#como-funciona">Como funciona</a>
+          <a href="#catalogo">Catálogo</a>
+          <a href="#faq">FAQ</a>
         </div>
-
-        {historico.length === 0 ? (
-          <div style={styles.empty}>
-            <span style={styles.emptyText}>nenhuma consulta registrada ainda</span>
-          </div>
-        ) : (
-          <div style={styles.timeline}>
-            {historico.map((h, idx) => {
-              const anterior = historico[idx + 1];
-              const mudouStatus = anterior && anterior.status !== h.status;
-              const cor =
-                h.status === "CONCLUIDA" ? "var(--green)" :
-                h.status === "ATIVA" ? "var(--yellow)" :
-                h.status && h.status.startsWith("REMOVIDA") ? "var(--red)" :
-                "var(--text-faint)";
-              return (
-                <div key={h.id} style={styles.timelineItem}>
-                  <div style={{ ...styles.timelineDot, background: cor }}></div>
-                  <div style={styles.timelineContent}>
-                    <div style={styles.timelineWhen}>
-                      {new Date(h.consultado_em).toLocaleString("pt-BR")}
-                      {idx === 0 && <span style={styles.timelineBadge}> ultima</span>}
-                      {mudouStatus && <span style={styles.timelineMudou}> - mudou de {anterior?.status || "-"}</span>}
-                    </div>
-                    <div style={styles.timelineStatus}>
-                      <span style={{ color: cor, fontWeight: 600 }}>{h.status ? (STATUS_LABELS[h.status] || h.status) : "-"}</span>
-                      {h.valor && <span style={styles.cellDim}> - R$ {h.valor}</span>}
-                    </div>
-                    {h.end_to_end_id && (
-                      <div style={styles.timelineE2eBox}>
-                        <code style={styles.timelineE2e}>E2E: {h.end_to_end_id}</code>
-                        <CopyButton texto={h.end_to_end_id} identificador={"hist-" + h.id} copiado={copiado} onCopiar={onCopiar} />
-                      </div>
-                    )}
-                    {(h.pagador_nome || h.pagador_documento) && (
-                      <div style={styles.timelinePagador}>pagador: {h.pagador_nome || "-"}{h.pagador_documento && <span> - {h.pagador_documento}</span>}</div>
-                    )}
-                    {h.horario_pagamento && (
-                      <div style={styles.timelineExtra}>pago em: {new Date(h.horario_pagamento).toLocaleString("pt-BR")}</div>
-                    )}
-                    {h.erro && <div style={styles.timelineErro}>{h.erro}</div>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <a href="#contato" className="nav-cta">Falar no WhatsApp</a>
       </div>
-    </div>
+    </nav>
   );
 }
 
-const styles: { [k: string]: React.CSSProperties } = {
-  main: { minHeight: "100vh", padding: "32px 24px 60px" },
-  container: { maxWidth: 1500, margin: "0 auto" },
-  header: { display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 24, marginBottom: 40, paddingBottom: 24, borderBottom: "1px solid var(--border)", flexWrap: "wrap" },
-  logo: { fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", display: "flex", alignItems: "center", gap: 8 },
-  logoDot: { color: "var(--accent)", fontSize: 12 },
-  logoAccent: { color: "var(--accent)", marginLeft: 4 },
-  tagline: { color: "var(--text-dim)", margin: "8px 0 0", fontSize: 13 },
-  taglineSerif: { fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 16, color: "var(--text)" },
-  stats: { display: "flex", gap: 20, flexWrap: "wrap" },
-  statBox: { textAlign: "right" },
-  statValue: { fontSize: 26, fontWeight: 700, lineHeight: 1, fontVariantNumeric: "tabular-nums" },
-  statLabel: { fontSize: 10, color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 4 },
-  card: { background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 8, padding: 24, marginBottom: 20 },
-  cardHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 },
-  cardLabel: { fontSize: 11, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.15em", fontWeight: 500 },
-  cardHelp: { fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 14, color: "var(--text-faint)" },
-  cardActions: { display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" },
-  select: { background: "var(--bg-elevated)", color: "var(--text)", border: "1px solid var(--border-strong)", borderRadius: 6, padding: "8px 12px", fontSize: 12, fontFamily: "var(--mono)", cursor: "pointer", outline: "none" },
-  textarea: { width: "100%", background: "var(--bg)", border: "1px solid var(--border-strong)", borderRadius: 6, padding: 14, color: "var(--text)", fontSize: 12, fontFamily: "var(--mono)", resize: "vertical", minHeight: 100, outline: "none" },
-  actions: { display: "flex", gap: 16, alignItems: "center", marginTop: 12, flexWrap: "wrap" },
-  btn: { padding: "10px 18px", fontSize: 12, fontWeight: 500, borderRadius: 6, textTransform: "lowercase", letterSpacing: "0.02em", transition: "all 0.15s" },
-  btnPrimary: { background: "var(--accent)", color: "var(--bg)" },
-  btnSecondary: { background: "var(--bg-elevated)", color: "var(--text)", border: "1px solid var(--border-strong)" },
-  btnGhost: { background: "transparent", color: "var(--text-faint)", border: "1px solid var(--border)" },
-  btnSmall: { padding: "6px 10px", fontSize: 12, borderRadius: 4, fontWeight: 600 },
-  copyBtn: { background: "transparent", border: "none", padding: "2px 6px", fontSize: 11, cursor: "pointer", borderRadius: 3 },
-  e2eCell: { display: "flex", alignItems: "center", gap: 4 },
-  e2eCode: { fontFamily: "var(--mono)", fontSize: 11, color: "var(--green)", background: "rgba(46, 230, 141, 0.08)", padding: "3px 6px", borderRadius: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 240, flex: 1 },
-  pagadorInfo: { fontSize: 10, color: "var(--text-faint)", marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-  statusDivergencia: { fontSize: 9, color: "var(--text-faint)", marginTop: 4, fontStyle: "italic" },
-  pollingAtivo: { color: "var(--accent)", fontWeight: 600, fontSize: 10 },
-  pollingInativo: { color: "var(--text-faint)", fontSize: 10 },
-  pollingTempo: { color: "var(--text-faint)", fontSize: 9, marginTop: 2 },
-  msg: { fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 14, color: "var(--text-dim)" },
-  empty: { padding: "60px 20px", textAlign: "center", border: "1px dashed var(--border)", borderRadius: 6 },
-  emptyText: { color: "var(--text-faint)", fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 16 },
-  table: { border: "1px solid var(--border)", borderRadius: 6, overflow: "hidden" },
-  tableHead: { display: "flex", gap: 12, padding: "10px 14px", background: "var(--bg-elevated)", fontSize: 10, color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600, borderBottom: "1px solid var(--border)" },
-  tableRow: { display: "flex", gap: 12, padding: "12px 14px", fontSize: 12, borderBottom: "1px solid var(--border)", alignItems: "center" },
-  tipoBadge: { display: "inline-block", padding: "3px 8px", borderRadius: 3, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 },
-  cellMain: { color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-  cellSub: { color: "var(--text-faint)", fontSize: 10, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-  cellDim: { color: "var(--text-dim)" },
-  cellFaint: { color: "var(--text-faint)" },
-  footer: { marginTop: 40, paddingTop: 20, borderTop: "1px solid var(--border)", textAlign: "center", color: "var(--text-faint)", fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 13 },
-  bolinhaAmarela: { display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: "var(--yellow)", boxShadow: "0 0 8px rgba(245, 197, 66, 0.6)" },
-  modalBackdrop: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 20, backdropFilter: "blur(4px)" },
-  modal: { background: "var(--bg-card)", border: "1px solid var(--border-strong)", borderRadius: 10, padding: 24, maxWidth: 720, width: "100%", maxHeight: "85vh", overflowY: "auto" },
-  modalHeader: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, paddingBottom: 16, borderBottom: "1px solid var(--border)" },
-  modalTitle: { fontSize: 14, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.15em" },
-  modalSubtitle: { fontSize: 16, color: "var(--text)", marginTop: 6 },
-  modalConfirmado: { fontSize: 12, marginTop: 8, fontWeight: 600, color: "var(--green)" },
-  modalClose: { background: "transparent", color: "var(--text-faint)", fontSize: 20, width: 32, height: 32, borderRadius: 4, border: "none", cursor: "pointer" },
-  timeline: { display: "flex", flexDirection: "column", gap: 0, position: "relative" },
-  timelineItem: { display: "flex", gap: 16, padding: "12px 0", borderLeft: "1px solid var(--border)", marginLeft: 6, paddingLeft: 24, position: "relative" },
-  timelineDot: { position: "absolute", left: -6, top: 16, width: 13, height: 13, borderRadius: "50%", border: "2px solid var(--bg-card)" },
-  timelineContent: { flex: 1 },
-  timelineWhen: { fontSize: 11, color: "var(--text-faint)" },
-  timelineBadge: { color: "var(--accent)", fontWeight: 700, marginLeft: 6 },
-  timelineMudou: { color: "var(--yellow)", fontStyle: "italic" },
-  timelineStatus: { fontSize: 13, marginTop: 4 },
-  timelineE2eBox: { marginTop: 6, display: "flex", alignItems: "center", gap: 6 },
-  timelineE2e: { fontSize: 11, color: "var(--green)", background: "rgba(46, 230, 141, 0.08)", padding: "4px 8px", borderRadius: 4, fontFamily: "var(--mono)" },
-  timelinePagador: { fontSize: 11, color: "var(--text-dim)", marginTop: 4 },
-  timelineExtra: { fontSize: 11, color: "var(--text-dim)", marginTop: 2 },
-  timelineErro: { fontSize: 11, color: "var(--red)", marginTop: 4 },
-};
+function Hero() {
+  return (
+    <section className="hero">
+      <div className="container">
+        <div className="hero-badge">
+          <span className="hero-badge-dot"></span>
+          Ativos para escalar com Google Ads
+        </div>
+        <h1>Anuncie no Google Ads com <span className="grad">precisão</span>, escale com segurança.</h1>
+        <p className="hero-sub">
+          Ativos criados um por um pensando sempre no melhor para você. Criado por player para player.
+        </p>
+        <div className="hero-actions">
+          <a href="#catalogo" className="btn-primary">
+            Ver catálogo
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </a>
+          <a href="#como-funciona" className="btn-secondary">Como funciona</a>
+        </div>
+        <div className="pilares">
+          <div className="pilar"><div className="pilar-num">Entrega</div><div className="pilar-label">Imediata</div></div>
+          <div className="pilar"><div className="pilar-num">Suporte</div><div className="pilar-label">Humano</div></div>
+          <div className="pilar"><div className="pilar-num">Ativos</div><div className="pilar-label">Testados</div></div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Beneficios() {
+  const beneficios = [
+    { icone: "M13 2L3 14h9l-1 8 10-12h-9l1-8z", titulo: "Entrega imediata", desc: "Pagou, o ativo cai no chat do pedido. Sem esperar atendente, sem burocracia." },
+    { icone: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", titulo: "Testado antes", desc: "Cada conta passa por verificação. Você não recebe ativo cru pra descobrir problema depois." },
+    { icone: "M17 9V7a5 5 0 00-10 0v2a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2z", titulo: "Preço na tela", desc: "Valor no anúncio e checkout no site. Sem chama no PV pra saber quanto é." },
+    { icone: "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z", titulo: "Suporte que responde", desc: "Deu problema, manda print no chat do pedido. Resposta rápida, sem enrolação." },
+  ];
+  return (
+    <section className="beneficios" id="beneficios">
+      <div className="container">
+        <div className="beneficios-header">
+          <div className="section-eyebrow">Por que G Ativos</div>
+          <h2 className="section-titulo">Feito pra sua operação não parar.</h2>
+          <p className="section-sub">Ativos separados por plataforma. Sem mistura, sem improviso.</p>
+        </div>
+        <div className="beneficios-grid">
+          {beneficios.map((b, i) => (
+            <div className="beneficio" key={i}>
+              <div className="beneficio-icone">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d={b.icone}/>
+                </svg>
+              </div>
+              <h3>{b.titulo}</h3>
+              <p>{b.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ComoFunciona() {
+  const passos = [
+    { num: "01", titulo: "Escolha o ativo", desc: "Catálogo com preço, especificação e estoque na tela. Compara e decide na hora." },
+    { num: "02", titulo: "Finalize a compra", desc: "Checkout no próprio site. Pix ou cartão, sem sair da página." },
+    { num: "03", titulo: "Receba na hora", desc: "Ativo entregue automaticamente no chat do pedido, em minutos após o pagamento." },
+    { num: "04", titulo: "Suba campanha", desc: "Suporte no chat se precisar. Escala com um ativo testado no seu painel." },
+  ];
+  return (
+    <section id="como-funciona">
+      <div className="container" style={{ textAlign: 'center' }}>
+        <div className="section-eyebrow">Como funciona</div>
+        <h2 className="section-titulo" style={{ marginLeft: 'auto', marginRight: 'auto' }}>4 passos. Sem sair do site.</h2>
+        <p className="section-sub" style={{ marginLeft: 'auto', marginRight: 'auto' }}>Do checkout ao ativo no seu painel em minutos.</p>
+        <div className="passos-grid">
+          {passos.map((p) => (
+            <div className="passo" key={p.num}>
+              <div className="passo-numero">{p.num}</div>
+              <h3>{p.titulo}</h3>
+              <p>{p.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Catalogo() {
+  const ativos = [
+    {
+      tag: "Gmail",
+      titulo: "Gmail Aquecido",
+      desc: "Gmail pronto pra criar contas de anúncio e operar sem restrição.",
+      precoAntigo: "R$ 49,00",
+      preco: "30",
+      precoInfo: "por unidade",
+      estoque: "156 em estoque",
+      items: [
+        "Conta Gmail Brasil",
+        "Telefone verificado",
+        "IP residencial de criação",
+        <><strong>Aquecimento realizado</strong> antes da entrega</>,
+        "Sem restrição no primeiro login",
+      ],
+      cta: "Comprar agora",
+      destaque: false,
+    },
+    {
+      tag: "Mais vendido",
+      titulo: "Conta Google Ads Verificada",
+      desc: "Conta pronta pra rodar campanha com verificação de anunciante e aquecimento.",
+      precoAntigo: "R$ 299,00",
+      preco: "200",
+      precoInfo: "único",
+      estoque: "38 em estoque",
+      items: [
+        <><strong>✅ Verificação de Anunciante</strong> Completa</>,
+        <><strong>✅ Aquecimento de Conta 🔥</strong></>,
+        "Conta Google Ads Brasil",
+        "Cartão vinculado + faturamento configurado",
+        "Suporte pós-venda de 7 dias",
+      ],
+      cta: "Comprar agora",
+      destaque: true,
+    },
+    {
+      tag: "Completa",
+      titulo: "Conta Google Ads Completa",
+      desc: "Estrutura completa pra rodar em nicho sensível sem cair na primeira análise.",
+      precoAntigo: "R$ 699,00",
+      preco: "500",
+      precoInfo: "único",
+      estoque: "12 em estoque",
+      items: [
+        <><strong>✅ Verificação de Anunciante</strong> Completa</>,
+        <><strong>✅ Verificação G2 Bancária</strong> — totalmente autêntica</>,
+        <><strong>✅ Serviços Financeiros</strong> com documentação verificada</>,
+        <><strong>✅ Pronta para gastos</strong> — sem limitações</>,
+        <><strong>✅ Aquecimento garantido 🔥</strong></>,
+        "Suporte pós-venda de 15 dias",
+      ],
+      cta: "Comprar agora",
+      destaque: false,
+    },
+  ];
+  return (
+    <section className="catalogo" id="catalogo">
+      <div className="container">
+        <div className="catalogo-titulo">
+          <div className="section-eyebrow">Catálogo</div>
+          <h2 className="section-titulo">Ativos para Google Ads.</h2>
+          <p className="section-sub">Preço na tela, estoque real. Se tá listado, tá disponível pra entrega imediata.</p>
+        </div>
+        <div className="catalogo-grid">
+          {ativos.map((a) => (
+            <div className={`ativo ${a.destaque ? 'destaque' : ''}`} key={a.titulo}>
+              <div className="ativo-tag">{a.tag}</div>
+              <h3>{a.titulo}</h3>
+              <div className="ativo-desc">{a.desc}</div>
+              <div className="ativo-preco-box">
+                <div className="ativo-preco">
+                  <span className="ativo-preco-antigo">{a.precoAntigo}</span>
+                  <strong>R$ {a.preco}</strong>
+                </div>
+                <div className="ativo-preco-info">Pagamento {a.precoInfo}</div>
+                <div className="ativo-estoque">{a.estoque}</div>
+              </div>
+              <ul>
+                {a.items.map((item, i) => (
+                  <li key={i}>
+                    <svg className="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <a href="#contato" className="ativo-cta">{a.cta}</a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Stats() {
+  return (
+    <section className="stats">
+      <div className="container">
+        <div className="stats-grid">
+          <div className="stat"><div className="stat-num"><span>3.2k+</span></div><div className="stat-label">Ativos entregues</div></div>
+          <div className="stat"><div className="stat-num"><span>98%</span></div><div className="stat-label">Ativos aprovados no primeiro uso</div></div>
+          <div className="stat"><div className="stat-num"><span>{"<"}5min</span></div><div className="stat-label">Tempo médio de entrega</div></div>
+          <div className="stat"><div className="stat-num"><span>24/7</span></div><div className="stat-label">Chat de pedidos disponível</div></div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Depoimentos() {
+  const deps = [
+    { texto: "Comprei o combo e já subi campanha no mesmo dia. Ativo entregue em 3 minutos, tudo funcionando na primeira. Melhor que 90% dos fornecedores que testei.", nome: "Juliano Marques", cargo: "Player · E-commerce" },
+    { texto: "Comprei 5 contas já e não tive nenhum problema. Preço justo, ativo bom, suporte responde na hora. Passei a comprar só aqui pra escala.", nome: "Renata Souza", cargo: "Media Buyer · Info" },
+    { texto: "Fugir do PV foi o melhor. Preço na tela, checkout no site, ativo no chat. Do jeito que operação de verdade tem que ser.", nome: "Lucas Pereira", cargo: "Gestor · Agência" },
+  ];
+  return (
+    <section className="depoimentos">
+      <div className="container">
+        <div className="depoimentos-titulo">
+          <div className="section-eyebrow">Depoimentos</div>
+          <h2 className="section-titulo">Player que já escala com a gente.</h2>
+          <p className="section-sub">Ativos testados na prática por quem opera todo dia.</p>
+        </div>
+        <div className="depoimentos-grid">
+          {deps.map((d, i) => (
+            <div className="depoimento" key={i}>
+              <div className="depoimento-estrelas">★★★★★</div>
+              <p className="depoimento-texto">"{d.texto}"</p>
+              <div className="depoimento-autor">
+                <div className="autor-avatar">{d.nome.split(' ').map(n => n[0]).join('')}</div>
+                <div>
+                  <div className="autor-nome">{d.nome}</div>
+                  <div className="autor-cargo">{d.cargo}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Faq() {
+  const [aberto, setAberto] = useState<number | null>(0);
+  const perguntas = [
+    { q: "Em quanto tempo recebo o ativo?", a: "Entrega imediata, geralmente em menos de 5 minutos após a confirmação do pagamento. Se demorar mais que isso, chama no chat do pedido que resolvemos na hora." },
+    { q: "Os ativos vêm testados mesmo?", a: "Sim. Cada conta passa por verificação antes de entrar no estoque: login, aquecimento, histórico de navegação, telefone verificado. Você não recebe ativo cru." },
+    { q: "E se der problema no ativo?", a: "Você tem período de garantia pós-venda (7 a 15 dias dependendo do produto). Nesse período, se o ativo cair, damos substituição gratuita. Só mandar print no chat do pedido." },
+    { q: "Como faço o pagamento?", a: "Pix ou cartão de crédito, direto no site. Sem sair da página, sem chamar no PV, sem burocracia. Assim que aprovado, entrega automática no chat." },
+    { q: "Vocês vendem ativo pra outras plataformas?", a: "Focamos em Google Ads. Se precisar de outras plataformas, chama no WhatsApp que a gente indica parceiros de confiança." },
+    { q: "Tem desconto pra compra em volume?", a: "Sim. Se você compra 5+ ativos por mês, entra em contato pelo WhatsApp que fazemos condição especial. Pra players em escala, temos combos exclusivos." },
+  ];
+  return (
+    <section id="faq">
+      <div className="container">
+        <div style={{ textAlign: 'center', marginBottom: 56 }}>
+          <div className="section-eyebrow">FAQ</div>
+          <h2 className="section-titulo" style={{ marginLeft: 'auto', marginRight: 'auto' }}>Dúvidas frequentes</h2>
+        </div>
+        <div className="faq-lista">
+          {perguntas.map((p, i) => (
+            <div className={`faq-item ${aberto === i ? 'aberto' : ''}`} key={i}>
+              <button className="faq-pergunta" onClick={() => setAberto(aberto === i ? null : i)}>
+                <span>{p.q}</span>
+                <svg className="faq-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 4V16M4 10H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              </button>
+              <div className="faq-resposta">{p.a}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CtaFinal() {
+  return (
+    <section className="cta-final" id="contato">
+      <div className="container">
+        <h2>Sua próxima <span className="grad">campanha</span> começa agora.</h2>
+        <p>Ativo testado, preço na tela e entrega no chat em minutos. Escolheu, pagou, subiu campanha.</p>
+        <div className="cta-actions">
+          <a href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20vim%20do%20site%20e%20quero%20comprar%20um%20ativo" target="_blank" rel="noopener" className="btn-primary">
+            Falar no WhatsApp
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </a>
+          <a href="#catalogo" className="btn-secondary">Ver catálogo</a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer>
+      <div className="container">
+        <div className="footer-inner">
+          <div className="footer-brand">
+            <Logo />
+            <p className="footer-desc">Ativos para operações de tráfego pago no Google Ads. Pagou no site, recebeu no chat.</p>
+          </div>
+          <div>
+            <h4>Catálogo</h4>
+            <ul>
+              <li><a href="#catalogo">Contas Google Ads</a></li>
+              <li><a href="#catalogo">Gmails</a></li>
+              <li><a href="#catalogo">Combos</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Empresa</h4>
+            <ul>
+              <li><a href="#beneficios">Benefícios</a></li>
+              <li><a href="#como-funciona">Como funciona</a></li>
+              <li><a href="#faq">FAQ</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Contato</h4>
+            <ul>
+              <li>contato@gativos.com.br</li>
+              <li>Chat 24/7 no pedido</li>
+            </ul>
+          </div>
+        </div>
+        <div className="footer-baixo">
+          <div>© 2026 G Ativos · Ativos para tráfego pago</div>
+          <div>Operação ética · Suporte humano</div>
+        </div>
+      </div>
+    </footer>
+  );
+}
