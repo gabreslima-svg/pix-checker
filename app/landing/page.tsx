@@ -196,9 +196,9 @@ export default function LandingPage() {
 
       <Nav />
       <Hero />
-      <Beneficios />
+      <Benefícios />
       <ComoFunciona />
-      <Catalogo />
+      <Catálogo />
       <Stats />
       <Depoimentos />
       <Faq />
@@ -223,9 +223,9 @@ function Nav() {
       <div className="container nav-inner">
         <a href="#"><Logo /></a>
         <div className="nav-links">
-          <a href="#beneficios">Beneficios</a>
+          <a href="#beneficios">Benefícios</a>
           <a href="#como-funciona">Como funciona</a>
-          <a href="#catalogo">Catalogo</a>
+          <a href="#catalogo">Catálogo</a>
           <a href="#faq">FAQ</a>
         </div>
         <a href="#contato" className="nav-cta">Falar no WhatsApp</a>
@@ -242,13 +242,13 @@ function Hero() {
           <span className="hero-badge-dot"></span>
           Ativos para escalar com Google Ads
         </div>
-        <h1>Anuncie no Google Ads com <span className="grad">precisao</span>, escale com seguranca.</h1>
+        <h1>Anuncie no Google Ads com <span className="grad">precisão</span>, escale com segurança.</h1>
         <p className="hero-sub">
-          Ativos criados um por um pensando sempre no melhor para voce. Criado por player para player.
+          Ativos criados um por um pensando sempre no melhor para você. Criado por player para player.
         </p>
         <div className="hero-actions">
           <a href="#catalogo" className="btn-primary">
-            Ver catalogo
+            Ver catálogo
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </a>
           <a href="#como-funciona" className="btn-secondary">Como funciona</a>
@@ -263,19 +263,19 @@ function Hero() {
   );
 }
 
-function Beneficios() {
+function Benefícios() {
   const beneficios = [
     { icone: "M13 2L3 14h9l-1 8 10-12h-9l1-8z", titulo: "Entrega imediata", desc: "Pagou, o ativo cai no chat do pedido. Sem esperar atendente, sem burocracia." },
-    { icone: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", titulo: "Testado antes", desc: "Cada conta passa por verificacao. Voce nao recebe ativo cru pra descobrir problema depois." },
-    { icone: "M17 9V7a5 5 0 00-10 0v2a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2z", titulo: "Preco na tela", desc: "Valor no anuncio e checkout no site. Sem chama no PV pra saber quanto e." },
-    { icone: "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z", titulo: "Suporte que responde", desc: "Deu problema, manda print no chat do pedido. Resposta rapida, sem enrolacao." },
+    { icone: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", titulo: "Testado antes", desc: "Cada conta passa por verificação. Você não recebe ativo cru pra descobrir problema depois." },
+    { icone: "M17 9V7a5 5 0 00-10 0v2a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2z", titulo: "Preço na tela", desc: "Valor no anúncio e checkout no site. Sem chama no PV pra saber quanto é." },
+    { icone: "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z", titulo: "Suporte que responde", desc: "Deu problema, manda print no chat do pedido. Resposta rápida, sem enrolação." },
   ];
   return (
     <section className="beneficios" id="beneficios">
       <div className="container">
         <div className="beneficios-header">
           <div className="section-eyebrow">Por que G Ativos</div>
-          <h2 className="section-titulo">Feito pra sua operacao nao parar.</h2>
+          <h2 className="section-titulo">Feito pra sua operação não parar.</h2>
           <p className="section-sub">Ativos separados por plataforma. Sem mistura, sem improviso.</p>
         </div>
         <div className="beneficios-grid">
@@ -298,9 +298,9 @@ function Beneficios() {
 
 function ComoFunciona() {
   const passos = [
-    { num: "01", titulo: "Escolha o ativo", desc: "Catalogo com preco, especificacao e estoque na tela. Compara e decide na hora." },
-    { num: "02", titulo: "Finalize a compra", desc: "Checkout no proprio site. Pix ou cartao, sem sair da pagina." },
-    { num: "03", titulo: "Receba na hora", desc: "Ativo entregue automaticamente no chat do pedido, em minutos apos o pagamento." },
+    { num: "01", titulo: "Escolha o ativo", desc: "Catálogo com preco, especificacao e estoque na tela. Compara e decide na hora." },
+    { num: "02", titulo: "Finalize a compra", desc: "Checkout no próprio site. Pix ou cartão, sem sair da página." },
+    { num: "03", titulo: "Receba na hora", desc: "Ativo entregue automaticamente no chat do pedido, em minutos após o pagamento." },
     { num: "04", titulo: "Suba campanha", desc: "Suporte no chat se precisar. Escala com um ativo testado e no seu painel." },
   ];
   return (
@@ -323,22 +323,22 @@ function ComoFunciona() {
   );
 }
 
-function Catalogo() {
+function Catálogo() {
   const ativos = [
     {
       tag: "Google Ads",
       titulo: "Conta Google Ads Aquecida",
-      desc: "Conta pronta pra rodar campanha desde o primeiro anuncio.",
+      desc: "Conta pronta pra rodar campanha desde o primeiro anúncio.",
       precoAntigo: "R$ 299,99",
       preco: "249,99",
-      precoInfo: "unico",
+      precoInfo: "único",
       estoque: "42 em estoque",
       items: [
         "Conta Google Ads verificada",
-        "Historico de aquecimento (7 dias)",
-        "Cartao vinculado + faturamento configurado",
-        "Sem limite diario inicial travado",
-        "Suporte pos venda de 7 dias",
+        "Histórico de aquecimento (7 dias)",
+        "Cartão vinculado + faturamento configurado",
+        "Sem limite diário inicial travado",
+        "Suporte pós venda de 7 dias",
       ],
       cta: "Comprar agora",
       destaque: false,
@@ -346,17 +346,17 @@ function Catalogo() {
     {
       tag: "Combo",
       titulo: "Combo Google Ads Start",
-      desc: "Estrutura completa pra comecar operacao no Google Ads sem dor de cabeca.",
+      desc: "Estrutura completa pra começar operação no Google Ads sem dor de cabeça.",
       precoAntigo: "R$ 599,99",
       preco: "449,99",
-      precoInfo: "unico",
+      precoInfo: "único",
       estoque: "18 em estoque",
       items: [
         <><strong>2x</strong> Conta Google Ads Aquecida</>,
         <><strong>2x</strong> Gmail Brasil verificado</>,
-        <><strong>1x</strong> Cartao virtual vinculado</>,
+        <><strong>1x</strong> Cartão virtual vinculado</>,
         <><strong>1x</strong> Manager Account (MCC) configurada</>,
-        "Suporte pos venda de 15 dias",
+        "Suporte pós venda de 15 dias",
       ],
       cta: "Comprar combo",
       destaque: true,
@@ -364,17 +364,17 @@ function Catalogo() {
     {
       tag: "Gmail",
       titulo: "Gmail Brasil Verificado",
-      desc: "Gmail pronto pra criar contas de anuncio, com verificacao completa.",
+      desc: "Gmail pronto pra criar contas de anúncio, com verificação completa.",
       precoAntigo: "R$ 89,99",
       preco: "69,99",
-      precoInfo: "unico",
+      precoInfo: "único",
       estoque: "156 em estoque",
       items: [
         "Conta Gmail Brasil",
         "Telefone verificado",
-        "IP residencial de criacao",
+        "IP residencial de criação",
         "Recovery email configurado",
-        "Sem restricao no primeiro login",
+        "Sem restrição no primeiro login",
       ],
       cta: "Comprar agora",
       destaque: false,
@@ -384,9 +384,9 @@ function Catalogo() {
     <section className="catalogo" id="catalogo">
       <div className="container">
         <div className="catalogo-titulo">
-          <div className="section-eyebrow">Catalogo</div>
+          <div className="section-eyebrow">Catálogo</div>
           <h2 className="section-titulo">Ativos para Google Ads.</h2>
-          <p className="section-sub">Preco na tela, estoque real. Se ta listado, ta disponivel pra entrega imediata.</p>
+          <p className="section-sub">Preço na tela, estoque real. Se ta listado, ta disponivel pra entrega imediata.</p>
         </div>
         <div className="catalogo-grid">
           {ativos.map((a) => (
@@ -426,8 +426,8 @@ function Stats() {
         <div className="stats-grid">
           <div className="stat"><div className="stat-num"><span>3.2k+</span></div><div className="stat-label">Ativos entregues</div></div>
           <div className="stat"><div className="stat-num"><span>98%</span></div><div className="stat-label">Ativos aprovados no primeiro uso</div></div>
-          <div className="stat"><div className="stat-num"><span>&lt;5min</span></div><div className="stat-label">Tempo medio de entrega</div></div>
-          <div className="stat"><div className="stat-num"><span>24/7</span></div><div className="stat-label">Chat de pedidos disponivel</div></div>
+          <div className="stat"><div className="stat-num"><span>&lt;5min</span></div><div className="stat-label">Tempo médio de entrega</div></div>
+          <div className="stat"><div className="stat-num"><span>24/7</span></div><div className="stat-label">Chat de pedidos disponível</div></div>
         </div>
       </div>
     </section>
@@ -436,17 +436,17 @@ function Stats() {
 
 function Depoimentos() {
   const deps = [
-    { texto: "Comprei o combo start e ja subi campanha no mesmo dia. Ativo entregue em 3 minutos, tudo funcionando na primeira. Melhor que 90% dos fornecedores que testei.", nome: "Juliano Marques", cargo: "Player · E-commerce" },
-    { texto: "Comprei 5 contas ja e nao tive nenhum problema. Preco justo, ativo bom, suporte responde na hora. Passei a comprar so aqui pra escala.", nome: "Renata Souza", cargo: "Media Buyer · Info" },
-    { texto: "Fugir do PV foi o melhor. Preco na tela, checkout no site, ativo no chat. Do jeito que operacao de verdade tem que ser.", nome: "Lucas Pereira", cargo: "Gestor · Agencia" },
+    { texto: "Comprei o combo start e já subi campanha no mesmo dia. Ativo entregue em 3 minutos, tudo funcionando na primeira. Melhor que 90% dos fornecedores que testei.", nome: "Juliano Marques", cargo: "Player · E-commerce" },
+    { texto: "Comprei 5 contas já e não tive nenhum problema. Preço justo, ativo bom, suporte responde na hora. Passei a comprar só aqui pra escala.", nome: "Renata Souza", cargo: "Media Buyer · Info" },
+    { texto: "Fugir do PV foi o melhor. Preço na tela, checkout no site, ativo no chat. Do jeito que operacao de verdade tem que ser.", nome: "Lucas Pereira", cargo: "Gestor · Agencia" },
   ];
   return (
     <section className="depoimentos">
       <div className="container">
         <div className="depoimentos-titulo">
           <div className="section-eyebrow">Depoimentos</div>
-          <h2 className="section-titulo">Player que ja escala com a gente.</h2>
-          <p className="section-sub">Ativos testados na pratica por quem opera todo dia.</p>
+          <h2 className="section-titulo">Player que já escala com a gente.</h2>
+          <p className="section-sub">Ativos testados na prática por quem opera todo dia.</p>
         </div>
         <div className="depoimentos-grid">
           {deps.map((d, i) => (
@@ -471,19 +471,19 @@ function Depoimentos() {
 function Faq() {
   const [aberto, setAberto] = useState<number | null>(0);
   const perguntas = [
-    { q: "Em quanto tempo recebo o ativo?", a: "Entrega imediata, geralmente em menos de 5 minutos apos a confirmacao do pagamento. Se demorar mais que isso, chama no chat do pedido que resolvemos na hora." },
-    { q: "Os ativos vem testados mesmo?", a: "Sim. Cada conta passa por verificacao antes de entrar no estoque: login, aquecimento, historico de navegacao, telefone verificado. Voce nao recebe ativo cru." },
-    { q: "E se der problema no ativo?", a: "Voce tem periodo de garantia pos-venda (7 a 15 dias dependendo do produto). Nesse periodo, se o ativo cair, dermos substituicao gratuita. So mandar print no chat do pedido." },
-    { q: "Como faco o pagamento?", a: "Pix ou cartao de credito, direto no site. Sem sair da pagina, sem chamar no PV, sem burocracia. Assim que aprovado, entrega automatica no chat." },
-    { q: "Voces vendem ativo pra outras plataformas?", a: "Sim, temos catalogo separado para Meta Ads, TikTok Ads e Google Ads. Cada plataforma com seu catalogo proprio, sem mistura de produto." },
-    { q: "Tem desconto pra compra em volume?", a: "Sim. Se voce compra 5+ ativos por mes, entra em contato pelo WhatsApp que fazemos condicao especial. Pra players em escala, temos combos exclusivos." },
+    { q: "Em quanto tempo recebo o ativo?", a: "Entrega imediata, geralmente em menos de 5 minutos após a confirmação do pagamento. Se demorar mais que isso, chama no chat do pedido que resolvemos na hora." },
+    { q: "Os ativos vêm testados mesmo?", a: "Sim. Cada conta passa por verificação antes de entrar no estoque: login, aquecimento, histórico de navegação, telefone verificado. Você não recebe ativo cru." },
+    { q: "E se der problema no ativo?", a: "Você tem período de garantia pós-venda (7 a 15 dias dependendo do produto). Nesse período, se o ativo cair, damos substituição gratuita. Só mandar print no chat do pedido." },
+    { q: "Como faço o pagamento?", a: "Pix ou cartão de crédito, direto no site. Sem sair da página, sem chamar no PV, sem burocracia. Assim que aprovado, entrega automática no chat." },
+    { q: "Vocês vendem ativo pra outras plataformas?", a: "Sim, temos catálogo separado para Meta Ads, TikTok Ads e Google Ads. Cada plataforma com seu catálogo próprio, sem mistura de produto." },
+    { q: "Tem desconto pra compra em volume?", a: "Sim. Se você compra 5+ ativos por mês, entra em contato pelo WhatsApp que fazemos condição especial. Pra players em escala, temos combos exclusivos." },
   ];
   return (
     <section id="faq">
       <div className="container">
         <div style={{ textAlign: 'center', marginBottom: 56 }}>
           <div className="section-eyebrow">FAQ</div>
-          <h2 className="section-titulo" style={{ marginLeft: 'auto', marginRight: 'auto' }}>Duvidas frequentes</h2>
+          <h2 className="section-titulo" style={{ marginLeft: 'auto', marginRight: 'auto' }}>Dúvidas frequentes</h2>
         </div>
         <div className="faq-lista">
           {perguntas.map((p, i) => (
@@ -505,14 +505,14 @@ function CtaFinal() {
   return (
     <section className="cta-final" id="contato">
       <div className="container">
-        <h2>Sua proxima <span className="grad">campanha</span> comeca agora.</h2>
-        <p>Ativo testado, preco na tela e entrega no chat em minutos. Escolheu, pagou, subiu campanha.</p>
+        <h2>Sua próxima <span className="grad">campanha</span> começa agora.</h2>
+        <p>Ativo testado, preço na tela e entrega no chat em minutos. Escolheu, pagou, subiu campanha.</p>
         <div className="cta-actions">
           <a href="https://wa.me/5511999999999?text=Ola%2C%20vim%20do%20site%20e%20quero%20comprar%20um%20ativo" target="_blank" rel="noopener" className="btn-primary">
             Falar no WhatsApp
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </a>
-          <a href="#catalogo" className="btn-secondary">Ver catalogo</a>
+          <a href="#catalogo" className="btn-secondary">Ver catálogo</a>
         </div>
       </div>
     </section>
@@ -526,10 +526,10 @@ function Footer() {
         <div className="footer-inner">
           <div className="footer-brand">
             <Logo />
-            <p className="footer-desc">Ativos para operacoes de trafego pago no Google Ads. Pagou no site, recebeu no chat.</p>
+            <p className="footer-desc">Ativos para operações de tráfego pago no Google Ads. Pagou no site, recebeu no chat.</p>
           </div>
           <div>
-            <h4>Catalogo</h4>
+            <h4>Catálogo</h4>
             <ul>
               <li><a href="#catalogo">Contas Google Ads</a></li>
               <li><a href="#catalogo">Gmails</a></li>
@@ -539,7 +539,7 @@ function Footer() {
           <div>
             <h4>Empresa</h4>
             <ul>
-              <li><a href="#beneficios">Beneficios</a></li>
+              <li><a href="#beneficios">Benefícios</a></li>
               <li><a href="#como-funciona">Como funciona</a></li>
               <li><a href="#faq">FAQ</a></li>
             </ul>
@@ -553,8 +553,8 @@ function Footer() {
           </div>
         </div>
         <div className="footer-baixo">
-          <div>© 2026 G Ativos · Ativos para trafego pago</div>
-          <div>Operacao etica · Suporte humano</div>
+          <div>© 2026 G Ativos · Ativos para tráfego pago</div>
+          <div>Operação ética · Suporte humano</div>
         </div>
       </div>
     </footer>
