@@ -9,7 +9,8 @@ export default function LandingPage() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
         :root {
           --bg: #0a0a0a; --bg-2: #111111; --bg-3: #171717;
-          --azul: #2563EB; --azul-claro: #3B82F6; --azul-glow: rgba(37,99,235,0.15);
+          --azul: #4285F4; --azul-claro: #5B9BFF; --azul-glow: rgba(66,133,244,0.18);
+          --google-red: #EA4335; --google-yellow: #FBBC04; --google-green: #34A853; --google-blue: #4285F4;
           --branco: #FFFFFF; --cinza-1: #A3A3A3; --cinza-2: #737373; --cinza-borda: #262626;
           --sans: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', monospace;
         }
@@ -20,10 +21,42 @@ export default function LandingPage() {
         button { cursor: pointer; font-family: inherit; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 
-        .nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,10,0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--cinza-borda); }
-        .nav-inner { display: flex; justify-content: space-between; align-items: center; height: 68px; }
-        .logo { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
-        .logo-badge { width: 32px; height: 32px; background: var(--azul); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: var(--branco); box-shadow: 0 0 20px var(--azul-glow); }
+        /* LOGO GA estilo Google */
+        .logo { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+        .logo-g {
+          width: 36px; height: 36px; border-radius: 50%;
+          background: conic-gradient(from -45deg, var(--google-blue) 0deg 90deg, var(--google-green) 90deg 180deg, var(--google-yellow) 180deg 270deg, var(--google-red) 270deg 360deg);
+          display: flex; align-items: center; justify-content: center;
+          position: relative;
+          box-shadow: 0 0 20px rgba(66,133,244,0.25);
+        }
+        .logo-g::before {
+          content: '';
+          position: absolute;
+          inset: 4px;
+          border-radius: 50%;
+          background: var(--bg);
+        }
+        .logo-g::after {
+          content: 'G';
+          position: relative; z-index: 1;
+          font-family: 'Inter', sans-serif;
+          font-weight: 700;
+          font-size: 20px;
+          background: linear-gradient(135deg, var(--google-blue) 0%, var(--google-green) 33%, var(--google-yellow) 66%, var(--google-red) 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          letter-spacing: -0.03em;
+        }
+        .logo-a {
+          background: linear-gradient(135deg, var(--google-blue), var(--google-green));
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+          font-weight: 800;
+        }
+
+        .nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,10,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--cinza-borda); }
+        .nav-inner { display: flex; justify-content: space-between; align-items: center; height: 72px; }
         .nav-links { display: flex; gap: 32px; font-size: 14px; color: var(--cinza-1); font-weight: 500; }
         .nav-links a:hover { color: var(--branco); }
         .nav-cta { background: var(--azul); color: var(--branco); padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: all 0.2s; }
@@ -31,30 +64,33 @@ export default function LandingPage() {
         @media (max-width: 768px) { .nav-links { display: none; } }
 
         .hero { padding: 100px 0 80px; position: relative; overflow: hidden; text-align: center; }
-        .hero::before { content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 800px; height: 400px; background: radial-gradient(ellipse, var(--azul-glow) 0%, transparent 60%); pointer-events: none; }
-        .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1px solid var(--cinza-borda); background: var(--bg-2); border-radius: 999px; font-size: 12px; color: var(--cinza-1); margin-bottom: 40px; position: relative; z-index: 1; }
+        .hero::before { content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 900px; height: 500px; background: radial-gradient(ellipse, var(--azul-glow) 0%, transparent 60%); pointer-events: none; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; border: 1px solid var(--cinza-borda); background: var(--bg-2); border-radius: 999px; font-size: 12px; color: var(--cinza-1); margin-bottom: 40px; position: relative; z-index: 1; font-weight: 500; }
         .hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #10B981; box-shadow: 0 0 8px #10B981; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .hero h1 { font-size: clamp(48px, 8vw, 96px); font-weight: 800; line-height: 0.95; letter-spacing: -0.04em; margin-bottom: 32px; max-width: 950px; margin-left: auto; margin-right: auto; position: relative; z-index: 1; }
-        .hero h1 span { background: linear-gradient(135deg, var(--azul-claro), #60A5FA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .hero-sub { font-size: 20px; color: var(--cinza-1); max-width: 640px; margin: 0 auto 48px; line-height: 1.5; position: relative; z-index: 1; }
+        .hero h1 { font-size: clamp(46px, 7.5vw, 88px); font-weight: 800; line-height: 0.98; letter-spacing: -0.04em; margin-bottom: 32px; max-width: 950px; margin-left: auto; margin-right: auto; position: relative; z-index: 1; }
+        .hero h1 .grad {
+          background: linear-gradient(135deg, var(--google-blue) 0%, var(--google-green) 50%, var(--google-yellow) 100%);
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .hero-sub { font-size: 19px; color: var(--cinza-1); max-width: 640px; margin: 0 auto 48px; line-height: 1.55; position: relative; z-index: 1; }
         .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 80px; position: relative; z-index: 1; }
-        .btn-primary { background: var(--azul); color: var(--branco); padding: 16px 32px; border-radius: 10px; font-size: 15px; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; box-shadow: 0 4px 20px rgba(37,99,235,0.3); }
-        .btn-primary:hover { background: var(--azul-claro); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(37,99,235,0.4); }
+        .btn-primary { background: var(--azul); color: var(--branco); padding: 16px 32px; border-radius: 10px; font-size: 15px; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; box-shadow: 0 4px 20px rgba(66,133,244,0.3); }
+        .btn-primary:hover { background: var(--azul-claro); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(66,133,244,0.4); }
         .btn-secondary { background: var(--bg-2); color: var(--branco); padding: 16px 32px; border-radius: 10px; font-size: 15px; font-weight: 600; border: 1px solid var(--cinza-borda); transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-secondary:hover { border-color: var(--azul); background: var(--bg-3); }
 
-        .pilares { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; max-width: 800px; margin: 0 auto; position: relative; z-index: 1; }
+        .pilares { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; max-width: 720px; margin: 0 auto; position: relative; z-index: 1; }
         .pilar { text-align: center; padding: 24px; border-right: 1px solid var(--cinza-borda); }
         .pilar:last-child { border-right: none; }
-        .pilar-num { font-family: var(--mono); font-size: 32px; font-weight: 700; color: var(--branco); line-height: 1; margin-bottom: 8px; }
+        .pilar-num { font-size: 26px; font-weight: 700; color: var(--branco); line-height: 1; margin-bottom: 8px; letter-spacing: -0.02em; }
         .pilar-label { font-size: 12px; color: var(--cinza-1); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; }
         @media (max-width: 640px) { .pilares { grid-template-columns: 1fr; } .pilar { border-right: none; border-bottom: 1px solid var(--cinza-borda); } .pilar:last-child { border-bottom: none; } }
 
         section { padding: 100px 0; position: relative; }
         .section-eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--azul-claro); font-weight: 600; margin-bottom: 16px; }
         .section-titulo { font-size: clamp(36px, 5vw, 56px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 24px; max-width: 720px; }
-        .section-sub { font-size: 18px; color: var(--cinza-1); max-width: 560px; margin-bottom: 56px; }
+        .section-sub { font-size: 18px; color: var(--cinza-1); max-width: 620px; margin-bottom: 56px; line-height: 1.55; }
 
         .beneficios { background: var(--bg-2); border-top: 1px solid var(--cinza-borda); border-bottom: 1px solid var(--cinza-borda); }
         .beneficios-header { text-align: center; margin-bottom: 64px; }
@@ -62,49 +98,54 @@ export default function LandingPage() {
         .beneficios-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
         .beneficio { padding: 32px 24px; background: var(--bg-3); border: 1px solid var(--cinza-borda); border-radius: 16px; transition: all 0.3s; }
         .beneficio:hover { border-color: var(--azul); transform: translateY(-4px); }
-        .beneficio-icone { width: 44px; height: 44px; background: rgba(37,99,235,0.1); border: 1px solid rgba(37,99,235,0.3); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: var(--azul-claro); }
+        .beneficio-icone { width: 44px; height: 44px; background: rgba(66,133,244,0.1); border: 1px solid rgba(66,133,244,0.3); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: var(--azul-claro); }
         .beneficio h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em; }
         .beneficio p { font-size: 14px; color: var(--cinza-1); line-height: 1.55; }
         @media (max-width: 768px) { .beneficios-grid { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 480px) { .beneficios-grid { grid-template-columns: 1fr; } }
 
         .passos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 60px; }
-        .passo { padding: 32px 24px; background: var(--bg-2); border: 1px solid var(--cinza-borda); border-radius: 16px; position: relative; transition: all 0.3s; }
+        .passo { padding: 32px 24px; background: var(--bg-2); border: 1px solid var(--cinza-borda); border-radius: 16px; position: relative; transition: all 0.3s; text-align: left; }
         .passo:hover { border-color: var(--azul); background: var(--bg-3); }
-        .passo-numero { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--azul-claro); margin-bottom: 24px; display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; background: rgba(37,99,235,0.1); border: 1px solid rgba(37,99,235,0.3); border-radius: 999px; }
+        .passo-numero { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--azul-claro); margin-bottom: 24px; display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; background: rgba(66,133,244,0.1); border: 1px solid rgba(66,133,244,0.3); border-radius: 999px; }
         .passo h3 { font-size: 20px; font-weight: 700; margin-bottom: 12px; letter-spacing: -0.02em; }
         .passo p { font-size: 14px; color: var(--cinza-1); line-height: 1.55; }
         @media (max-width: 900px) { .passos-grid { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 480px) { .passos-grid { grid-template-columns: 1fr; } }
 
-        .servicos { background: var(--bg-2); border-top: 1px solid var(--cinza-borda); border-bottom: 1px solid var(--cinza-borda); }
-        .servicos-titulo { text-align: center; margin-bottom: 64px; }
-        .servicos-titulo .section-titulo, .servicos-titulo .section-sub { margin-left: auto; margin-right: auto; }
-        .servicos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-        .servico { padding: 40px 32px; background: var(--bg-3); border: 1px solid var(--cinza-borda); border-radius: 20px; transition: all 0.3s; }
-        .servico:hover { border-color: var(--azul); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(37,99,235,0.1); }
-        .servico.destaque { background: linear-gradient(180deg, rgba(37,99,235,0.08) 0%, var(--bg-3) 100%); border-color: rgba(37,99,235,0.4); position: relative; }
-        .servico.destaque::before { content: 'MAIS ESCOLHIDO'; position: absolute; top: 20px; right: 20px; background: var(--azul); padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; }
-        .servico-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--azul-claro); font-weight: 600; margin-bottom: 12px; }
-        .servico h3 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
-        .servico-preco { font-size: 14px; color: var(--cinza-1); margin-bottom: 24px; }
-        .servico-preco strong { color: var(--branco); font-size: 32px; font-weight: 800; font-family: var(--mono); letter-spacing: -0.02em; margin-right: 4px; }
-        .servico ul { list-style: none; margin-bottom: 32px; }
-        .servico li { padding: 10px 0; border-bottom: 1px solid var(--cinza-borda); font-size: 14px; color: var(--cinza-1); display: flex; align-items: flex-start; gap: 10px; }
-        .servico li:last-child { border-bottom: none; }
-        .servico li strong { color: var(--branco); font-weight: 600; }
+        .catalogo { background: var(--bg-2); border-top: 1px solid var(--cinza-borda); border-bottom: 1px solid var(--cinza-borda); }
+        .catalogo-titulo { text-align: center; margin-bottom: 64px; }
+        .catalogo-titulo .section-titulo, .catalogo-titulo .section-sub { margin-left: auto; margin-right: auto; }
+        .catalogo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .ativo { padding: 32px; background: var(--bg-3); border: 1px solid var(--cinza-borda); border-radius: 20px; transition: all 0.3s; display: flex; flex-direction: column; }
+        .ativo:hover { border-color: var(--azul); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(66,133,244,0.08); }
+        .ativo.destaque { background: linear-gradient(180deg, rgba(66,133,244,0.08) 0%, var(--bg-3) 100%); border-color: rgba(66,133,244,0.4); position: relative; }
+        .ativo.destaque::before { content: 'MAIS PROCURADO'; position: absolute; top: 20px; right: 20px; background: var(--azul); padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; }
+        .ativo-tag { font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--azul-claro); font-weight: 600; margin-bottom: 12px; }
+        .ativo h3 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+        .ativo-desc { font-size: 13px; color: var(--cinza-1); margin-bottom: 24px; }
+        .ativo-preco-box { padding: 16px; background: var(--bg); border: 1px solid var(--cinza-borda); border-radius: 12px; margin-bottom: 20px; }
+        .ativo-preco { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
+        .ativo-preco-antigo { font-size: 13px; color: var(--cinza-2); text-decoration: line-through; }
+        .ativo-preco strong { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+        .ativo-preco-info { font-size: 11px; color: var(--cinza-1); }
+        .ativo-estoque { font-size: 11px; color: #10B981; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+        .ativo-estoque::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #10B981; }
+        .ativo ul { list-style: none; margin-bottom: 24px; flex: 1; }
+        .ativo li { padding: 8px 0; font-size: 13px; color: var(--cinza-1); display: flex; align-items: flex-start; gap: 10px; }
+        .ativo li strong { color: var(--branco); font-weight: 600; }
         .check-icon { color: var(--azul-claro); flex-shrink: 0; margin-top: 2px; }
-        .servico-cta { display: block; text-align: center; padding: 14px; background: var(--bg); border: 1px solid var(--cinza-borda); border-radius: 10px; font-size: 14px; font-weight: 600; transition: all 0.2s; }
-        .servico-cta:hover { background: var(--azul); border-color: var(--azul); }
-        .servico.destaque .servico-cta { background: var(--azul); border-color: var(--azul); }
-        .servico.destaque .servico-cta:hover { background: var(--azul-claro); }
-        @media (max-width: 900px) { .servicos-grid { grid-template-columns: 1fr; } }
+        .ativo-cta { display: block; text-align: center; padding: 14px; background: var(--bg); border: 1px solid var(--cinza-borda); border-radius: 10px; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        .ativo-cta:hover { background: var(--azul); border-color: var(--azul); }
+        .ativo.destaque .ativo-cta { background: var(--azul); border-color: var(--azul); }
+        .ativo.destaque .ativo-cta:hover { background: var(--azul-claro); }
+        @media (max-width: 900px) { .catalogo-grid { grid-template-columns: 1fr; } }
 
         .stats { background: var(--bg); }
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding: 60px 0; border-top: 1px solid var(--cinza-borda); border-bottom: 1px solid var(--cinza-borda); }
         .stat { text-align: center; }
-        .stat-num { font-family: var(--mono); font-size: 48px; font-weight: 700; letter-spacing: -0.03em; color: var(--branco); line-height: 1; margin-bottom: 12px; }
-        .stat-num span { color: var(--azul-claro); }
+        .stat-num { font-size: 44px; font-weight: 800; letter-spacing: -0.03em; color: var(--branco); line-height: 1; margin-bottom: 12px; }
+        .stat-num span { background: linear-gradient(135deg, var(--google-blue), var(--google-green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .stat-label { font-size: 13px; color: var(--cinza-1); }
         @media (max-width: 768px) { .stats-grid { grid-template-columns: 1fr 1fr; gap: 32px; } }
 
@@ -116,7 +157,7 @@ export default function LandingPage() {
         .depoimento-estrelas { color: #FBBF24; margin-bottom: 16px; font-size: 16px; letter-spacing: 2px; }
         .depoimento-texto { font-size: 15px; line-height: 1.6; color: var(--cinza-1); margin-bottom: 24px; }
         .depoimento-autor { display: flex; align-items: center; gap: 12px; padding-top: 20px; border-top: 1px solid var(--cinza-borda); }
-        .autor-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--azul), #1e40af); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+        .autor-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--google-blue), var(--google-green)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--branco); }
         .autor-nome { font-size: 14px; font-weight: 600; }
         .autor-cargo { font-size: 12px; color: var(--cinza-1); }
         @media (max-width: 900px) { .depoimentos-grid { grid-template-columns: 1fr; } }
@@ -128,13 +169,13 @@ export default function LandingPage() {
         .faq-icon { flex-shrink: 0; transition: transform 0.2s; color: var(--azul-claro); }
         .faq-item.aberto .faq-icon { transform: rotate(45deg); }
         .faq-resposta { max-height: 0; overflow: hidden; transition: max-height 0.3s, padding 0.3s; font-size: 14px; color: var(--cinza-1); line-height: 1.6; padding: 0 24px; }
-        .faq-item.aberto .faq-resposta { max-height: 400px; padding: 0 24px 24px; }
+        .faq-item.aberto .faq-resposta { max-height: 500px; padding: 0 24px 24px; }
 
-        .cta-final { background: linear-gradient(180deg, var(--bg) 0%, rgba(37,99,235,0.05) 100%); padding: 100px 0 120px; text-align: center; border-top: 1px solid var(--cinza-borda); position: relative; overflow: hidden; }
+        .cta-final { background: linear-gradient(180deg, var(--bg) 0%, rgba(66,133,244,0.05) 100%); padding: 100px 0 120px; text-align: center; border-top: 1px solid var(--cinza-borda); position: relative; overflow: hidden; }
         .cta-final::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 900px; height: 500px; background: radial-gradient(ellipse, var(--azul-glow) 0%, transparent 60%); pointer-events: none; }
         .cta-final > * { position: relative; z-index: 1; }
         .cta-final h2 { font-size: clamp(36px, 6vw, 64px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 24px; max-width: 750px; margin-left: auto; margin-right: auto; }
-        .cta-final h2 span { background: linear-gradient(135deg, var(--azul-claro), #60A5FA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .cta-final h2 .grad { background: linear-gradient(135deg, var(--google-blue), var(--google-green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .cta-final p { font-size: 18px; color: var(--cinza-1); margin-bottom: 40px; max-width: 560px; margin-left: auto; margin-right: auto; }
         .cta-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 
@@ -157,7 +198,7 @@ export default function LandingPage() {
       <Hero />
       <Beneficios />
       <ComoFunciona />
-      <Servicos />
+      <Catalogo />
       <Stats />
       <Depoimentos />
       <Faq />
@@ -167,21 +208,27 @@ export default function LandingPage() {
   );
 }
 
+function Logo() {
+  return (
+    <div className="logo">
+      <span className="logo-g"></span>
+      <span>a<span className="logo-a"> ativos</span></span>
+    </div>
+  );
+}
+
 function Nav() {
   return (
     <nav className="nav">
       <div className="container nav-inner">
-        <a href="#" className="logo">
-          <span className="logo-badge">GA</span>
-          <span>Ativos</span>
-        </a>
+        <a href="#"><Logo /></a>
         <div className="nav-links">
           <a href="#beneficios">Beneficios</a>
           <a href="#como-funciona">Como funciona</a>
-          <a href="#servicos">Servicos</a>
+          <a href="#catalogo">Catalogo</a>
           <a href="#faq">FAQ</a>
         </div>
-        <a href="#contato" className="nav-cta">Falar com especialista</a>
+        <a href="#contato" className="nav-cta">Falar no WhatsApp</a>
       </div>
     </nav>
   );
@@ -193,23 +240,23 @@ function Hero() {
       <div className="container">
         <div className="hero-badge">
           <span className="hero-badge-dot"></span>
-          Vagas abertas · Analise gratuita em 48h
+          Ativos para escalar com Google Ads
         </div>
-        <h1>Google Ads que <span>faz vender</span>, nao so aparecer.</h1>
+        <h1>Anuncie no Google Ads com <span className="grad">precisao</span>, escale com seguranca.</h1>
         <p className="hero-sub">
-          Gestao de trafego pago focada em resultado real. Auditamos, estruturamos e otimizamos suas campanhas ate o ROI aparecer no caixa — nao so no dashboard.
+          Ativos criados um por um pensando sempre no melhor para voce. Criado por player para player.
         </p>
         <div className="hero-actions">
-          <a href="#contato" className="btn-primary">
-            Solicitar analise gratuita
+          <a href="#catalogo" className="btn-primary">
+            Ver catalogo
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </a>
           <a href="#como-funciona" className="btn-secondary">Como funciona</a>
         </div>
         <div className="pilares">
-          <div className="pilar"><div className="pilar-num">R$47M+</div><div className="pilar-label">Gerenciados</div></div>
-          <div className="pilar"><div className="pilar-num">4.2x</div><div className="pilar-label">ROAS medio</div></div>
-          <div className="pilar"><div className="pilar-num">120+</div><div className="pilar-label">Empresas ativas</div></div>
+          <div className="pilar"><div className="pilar-num">Entrega</div><div className="pilar-label">Imediata</div></div>
+          <div className="pilar"><div className="pilar-num">Suporte</div><div className="pilar-label">Humano</div></div>
+          <div className="pilar"><div className="pilar-num">Ativos</div><div className="pilar-label">Testados</div></div>
         </div>
       </div>
     </section>
@@ -218,18 +265,18 @@ function Hero() {
 
 function Beneficios() {
   const beneficios = [
-    { icone: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5", titulo: "Estrategia validada", desc: "Nao chutamos. Cada campanha nasce de auditoria + benchmarks reais do seu nicho." },
-    { icone: "M22 12h-4l-3 9L9 3l-3 9H2", titulo: "Tracking preciso", desc: "GTM, conversoes offline, integracao com CRM. Rastreamos cada real ate virar cliente." },
-    { icone: "M12 20V10M18 20V4M6 20v-4", titulo: "Otimizacao semanal", desc: "Report toda semana com numeros crus. Sem metricas de vaidade, sem enrolacao." },
-    { icone: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z", titulo: "Suporte direto", desc: "Voce fala com quem opera. Sem intermediario, sem gerente de contas robotico." },
+    { icone: "M13 2L3 14h9l-1 8 10-12h-9l1-8z", titulo: "Entrega imediata", desc: "Pagou, o ativo cai no chat do pedido. Sem esperar atendente, sem burocracia." },
+    { icone: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", titulo: "Testado antes", desc: "Cada conta passa por verificacao. Voce nao recebe ativo cru pra descobrir problema depois." },
+    { icone: "M17 9V7a5 5 0 00-10 0v2a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2z", titulo: "Preco na tela", desc: "Valor no anuncio e checkout no site. Sem chama no PV pra saber quanto e." },
+    { icone: "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z", titulo: "Suporte que responde", desc: "Deu problema, manda print no chat do pedido. Resposta rapida, sem enrolacao." },
   ];
   return (
     <section className="beneficios" id="beneficios">
       <div className="container">
         <div className="beneficios-header">
           <div className="section-eyebrow">Por que GA Ativos</div>
-          <h2 className="section-titulo">Feito pra sua verba nao ser queimada.</h2>
-          <p className="section-sub">Trabalhamos como socio da operacao. Se voce nao escala, a gente tambem nao.</p>
+          <h2 className="section-titulo">Feito pra sua operacao nao parar.</h2>
+          <p className="section-sub">Ativos separados por plataforma. Sem mistura, sem improviso.</p>
         </div>
         <div className="beneficios-grid">
           {beneficios.map((b, i) => (
@@ -251,17 +298,17 @@ function Beneficios() {
 
 function ComoFunciona() {
   const passos = [
-    { num: "01", titulo: "Auditoria gratuita", desc: "Analisamos sua conta atual, achamos onde ta queimando verba e entregamos plano de acao em 48h." },
-    { num: "02", titulo: "Estruturacao", desc: "Montamos campanhas do zero: keywords, criativos, tracking, integracao com CRM." },
-    { num: "03", titulo: "Escala controlada", desc: "Comecamos com verba baixa, validamos, e escalamos so o que ja provou converter." },
-    { num: "04", titulo: "Otimizacao continua", desc: "Report semanal + reunioes quinzenais. Cortamos rapido, escalamos rapido." },
+    { num: "01", titulo: "Escolha o ativo", desc: "Catalogo com preco, especificacao e estoque na tela. Compara e decide na hora." },
+    { num: "02", titulo: "Finalize a compra", desc: "Checkout no proprio site. Pix ou cartao, sem sair da pagina." },
+    { num: "03", titulo: "Receba na hora", desc: "Ativo entregue automaticamente no chat do pedido, em minutos apos o pagamento." },
+    { num: "04", titulo: "Suba campanha", desc: "Suporte no chat se precisar. Escala com um ativo testado e no seu painel." },
   ];
   return (
     <section id="como-funciona">
       <div className="container" style={{ textAlign: 'center' }}>
         <div className="section-eyebrow">Como funciona</div>
-        <h2 className="section-titulo" style={{ marginLeft: 'auto', marginRight: 'auto' }}>4 passos. Sem enrolacao.</h2>
-        <p className="section-sub" style={{ marginLeft: 'auto', marginRight: 'auto' }}>Do primeiro contato a primeira venda gerada em menos de 30 dias.</p>
+        <h2 className="section-titulo" style={{ marginLeft: 'auto', marginRight: 'auto' }}>4 passos. Sem sair do site.</h2>
+        <p className="section-sub" style={{ marginLeft: 'auto', marginRight: 'auto' }}>Do checkout ao ativo no seu painel em minutos.</p>
         <div className="passos-grid">
           {passos.map((p) => (
             <div className="passo" key={p.num}>
@@ -276,81 +323,94 @@ function ComoFunciona() {
   );
 }
 
-function Servicos() {
-  const servicos = [
+function Catalogo() {
+  const ativos = [
     {
-      label: "Basico",
-      titulo: "Starter",
-      preco: "1.497",
-      periodo: "/mes",
+      tag: "Google Ads",
+      titulo: "Conta Google Ads Aquecida",
+      desc: "Conta pronta pra rodar campanha desde o primeiro anuncio.",
+      precoAntigo: "R$ 299,99",
+      preco: "249,99",
+      precoInfo: "unico",
+      estoque: "42 em estoque",
       items: [
-        { destaque: "Ate R$ 10k/mes em midia" },
-        { destaque: "Google Search + Performance Max" },
-        { destaque: "Tracking basico via GTM" },
-        { destaque: "Report semanal por email" },
-        { destaque: "Suporte via WhatsApp" },
+        "Conta Google Ads verificada",
+        "Historico de aquecimento (7 dias)",
+        "Cartao vinculado + faturamento configurado",
+        "Sem limite diario inicial travado",
+        "Suporte pos venda de 7 dias",
       ],
-      cta: "Comecar com Starter",
+      cta: "Comprar agora",
       destaque: false,
     },
     {
-      label: "Mais vendido",
-      titulo: "Growth",
-      preco: "2.997",
-      periodo: "/mes",
+      tag: "Combo",
+      titulo: "Combo Google Ads Start",
+      desc: "Estrutura completa pra comecar operacao no Google Ads sem dor de cabeca.",
+      precoAntigo: "R$ 599,99",
+      preco: "449,99",
+      precoInfo: "unico",
+      estoque: "18 em estoque",
       items: [
-        { destaque: "Ate R$ 50k/mes em midia" },
-        { destaque: "Search + PMax + Display + YouTube" },
-        { destaque: "Tracking avancado + conversoes offline" },
-        { destaque: "Integracao CRM (HubSpot, RD, Pipedrive)" },
-        { destaque: "Report semanal + reuniao quinzenal" },
-        { destaque: "A/B teste de criativos" },
+        <><strong>2x</strong> Conta Google Ads Aquecida</>,
+        <><strong>2x</strong> Gmail Brasil verificado</>,
+        <><strong>1x</strong> Cartao virtual vinculado</>,
+        <><strong>1x</strong> Manager Account (MCC) configurada</>,
+        "Suporte pos venda de 15 dias",
       ],
-      cta: "Comecar com Growth",
+      cta: "Comprar combo",
       destaque: true,
     },
     {
-      label: "Escala",
-      titulo: "Enterprise",
-      preco: "sob consulta",
-      periodo: "",
+      tag: "Gmail",
+      titulo: "Gmail Brasil Verificado",
+      desc: "Gmail pronto pra criar contas de anuncio, com verificacao completa.",
+      precoAntigo: "R$ 89,99",
+      preco: "69,99",
+      precoInfo: "unico",
+      estoque: "156 em estoque",
       items: [
-        { destaque: "Verba a partir de R$ 100k/mes" },
-        { destaque: "Todas as plataformas Google" },
-        { destaque: "Time dedicado (gestor + analista)" },
-        { destaque: "BI customizado + dashboards ao vivo" },
-        { destaque: "Reunioes semanais + trimestrais" },
-        { destaque: "SLA de resposta em 2h uteis" },
+        "Conta Gmail Brasil",
+        "Telefone verificado",
+        "IP residencial de criacao",
+        "Recovery email configurado",
+        "Sem restricao no primeiro login",
       ],
-      cta: "Falar com comercial",
+      cta: "Comprar agora",
       destaque: false,
     },
   ];
   return (
-    <section className="servicos" id="servicos">
+    <section className="catalogo" id="catalogo">
       <div className="container">
-        <div className="servicos-titulo">
-          <div className="section-eyebrow">Servicos</div>
-          <h2 className="section-titulo">Um plano pra cada momento.</h2>
-          <p className="section-sub">Sem taxa de setup, sem letra miuda. Fidelidade minima de 90 dias — tempo que o Google precisa pra performar.</p>
+        <div className="catalogo-titulo">
+          <div className="section-eyebrow">Catalogo</div>
+          <h2 className="section-titulo">Ativos para Google Ads.</h2>
+          <p className="section-sub">Preco na tela, estoque real. Se ta listado, ta disponivel pra entrega imediata.</p>
         </div>
-        <div className="servicos-grid">
-          {servicos.map((s) => (
-            <div className={`servico ${s.destaque ? 'destaque' : ''}`} key={s.titulo}>
-              <div className="servico-label">{s.label}</div>
-              <h3>{s.titulo}</h3>
-              <div className="servico-preco">
-                {s.preco !== "sob consulta" ? <><strong>R$ {s.preco}</strong>{s.periodo}</> : <strong style={{ fontSize: 24 }}>{s.preco}</strong>}
+        <div className="catalogo-grid">
+          {ativos.map((a) => (
+            <div className={`ativo ${a.destaque ? 'destaque' : ''}`} key={a.titulo}>
+              <div className="ativo-tag">{a.tag}</div>
+              <h3>{a.titulo}</h3>
+              <div className="ativo-desc">{a.desc}</div>
+              <div className="ativo-preco-box">
+                <div className="ativo-preco">
+                  <span className="ativo-preco-antigo">{a.precoAntigo}</span>
+                  <strong>R$ {a.preco}</strong>
+                </div>
+                <div className="ativo-preco-info">Pagamento {a.precoInfo}</div>
+                <div className="ativo-estoque">{a.estoque}</div>
               </div>
               <ul>
-                {s.items.map((item, i) => (
+                {a.items.map((item, i) => (
                   <li key={i}>
                     <svg className="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span>{item.destaque}</span>
+                    <span>{item}</span>
                   </li>
                 ))}
               </ul>
-              <a href="#contato" className="servico-cta">{s.cta}</a>
+              <a href="#contato" className="ativo-cta">{a.cta}</a>
             </div>
           ))}
         </div>
@@ -364,10 +424,10 @@ function Stats() {
     <section className="stats">
       <div className="container">
         <div className="stats-grid">
-          <div className="stat"><div className="stat-num">R$ <span>47M</span></div><div className="stat-label">Investidos em midia (12 meses)</div></div>
-          <div className="stat"><div className="stat-num"><span>4.2x</span></div><div className="stat-label">ROAS medio dos clientes ativos</div></div>
-          <div className="stat"><div className="stat-num"><span>120+</span></div><div className="stat-label">Empresas escalando com a gente</div></div>
-          <div className="stat"><div className="stat-num"><span>12</span>d</div><div className="stat-label">Ate a primeira otimizacao</div></div>
+          <div className="stat"><div className="stat-num"><span>3.2k+</span></div><div className="stat-label">Ativos entregues</div></div>
+          <div className="stat"><div className="stat-num"><span>98%</span></div><div className="stat-label">Ativos aprovados no primeiro uso</div></div>
+          <div className="stat"><div className="stat-num"><span>&lt;5min</span></div><div className="stat-label">Tempo medio de entrega</div></div>
+          <div className="stat"><div className="stat-num"><span>24/7</span></div><div className="stat-label">Chat de pedidos disponivel</div></div>
         </div>
       </div>
     </section>
@@ -376,17 +436,17 @@ function Stats() {
 
 function Depoimentos() {
   const deps = [
-    { texto: "Trocamos 3 agencias antes de encontrar a GA. Diferenca de mundo — primeira que trata anuncio como investimento, nao despesa fixa. ROAS subiu de 1.8 pra 4.1 em 2 meses.", nome: "Juliano Marques", cargo: "CEO · E-commerce moda" },
-    { texto: "Saimos de 40 leads/mes pra mais de 200, com CPA menor. A auditoria inicial ja mostrou onde tava vazando dinheiro. Foram diretos: cortaram 60% das campanhas velhas.", nome: "Renata Souza", cargo: "Diretora · Odontologia" },
-    { texto: "Ja duplicamos o investimento duas vezes esse ano. Cada real que colocamos volta em 3 meses. Report semanal e transparente — sem numero inventado, sem dashboard bonito e caixa vazio.", nome: "Lucas Pereira", cargo: "Fundador · SaaS B2B" },
+    { texto: "Comprei o combo start e ja subi campanha no mesmo dia. Ativo entregue em 3 minutos, tudo funcionando na primeira. Melhor que 90% dos fornecedores que testei.", nome: "Juliano Marques", cargo: "Player · E-commerce" },
+    { texto: "Comprei 5 contas ja e nao tive nenhum problema. Preco justo, ativo bom, suporte responde na hora. Passei a comprar so aqui pra escala.", nome: "Renata Souza", cargo: "Media Buyer · Info" },
+    { texto: "Fugir do PV foi o melhor. Preco na tela, checkout no site, ativo no chat. Do jeito que operacao de verdade tem que ser.", nome: "Lucas Pereira", cargo: "Gestor · Agencia" },
   ];
   return (
     <section className="depoimentos">
       <div className="container">
         <div className="depoimentos-titulo">
           <div className="section-eyebrow">Depoimentos</div>
-          <h2 className="section-titulo">Quem ja parou de queimar verba.</h2>
-          <p className="section-sub">Cada case abaixo e rastreavel. Quiser conferir dashboard, mostramos.</p>
+          <h2 className="section-titulo">Player que ja escala com a gente.</h2>
+          <p className="section-sub">Ativos testados na pratica por quem opera todo dia.</p>
         </div>
         <div className="depoimentos-grid">
           {deps.map((d, i) => (
@@ -411,12 +471,12 @@ function Depoimentos() {
 function Faq() {
   const [aberto, setAberto] = useState<number | null>(0);
   const perguntas = [
-    { q: "Quanto tempo ate ver resultado?", a: "15 a 30 dias pros primeiros resultados consistentes. Google Ads precisa de dados pra otimizar — nas primeiras 2 semanas o algoritmo esta aprendendo. A partir do segundo mes, numeros comecam a estabilizar e escalar." },
-    { q: "Qual investimento minimo em midia?", a: "R$ 5.000/mes e o piso tecnico pra dar volume de dados suficiente pro Google otimizar. Abaixo disso os anuncios ficam ineficientes independente da agencia. Ideal e comecar com R$ 10-15k pra ter margem de teste." },
-    { q: "Voces cobram taxa fixa ou % sobre midia?", a: "Taxa mensal fixa, independente do quanto voce investe em midia. Assim o incentivo esta alinhado: ganhamos mais quando voce escala, mas nao recebemos comissao por queimar orcamento." },
-    { q: "Preciso ter site proprio?", a: "Precisa ter uma pagina de conversao (site, LP, ou loja). Se nao tiver, encaminhamos parceiros que fazem. Nao fazemos internamente — foco 100% em trafego e midia." },
-    { q: "Trabalham com quais segmentos?", a: "Todos que geram vendas online: e-commerce, servicos locais, SaaS, educacao, saude (nicho legal), infoprodutos com historico. Nao trabalhamos com apostas, cripto de risco ou nichos proibidos pelo Google." },
-    { q: "Existe fidelidade?", a: "Minimo de 90 dias — tempo que o Google precisa pra performar. Depois disso, mensal sem multa. Se quiser sair, sai sem burocracia." },
+    { q: "Em quanto tempo recebo o ativo?", a: "Entrega imediata, geralmente em menos de 5 minutos apos a confirmacao do pagamento. Se demorar mais que isso, chama no chat do pedido que resolvemos na hora." },
+    { q: "Os ativos vem testados mesmo?", a: "Sim. Cada conta passa por verificacao antes de entrar no estoque: login, aquecimento, historico de navegacao, telefone verificado. Voce nao recebe ativo cru." },
+    { q: "E se der problema no ativo?", a: "Voce tem periodo de garantia pos-venda (7 a 15 dias dependendo do produto). Nesse periodo, se o ativo cair, dermos substituicao gratuita. So mandar print no chat do pedido." },
+    { q: "Como faco o pagamento?", a: "Pix ou cartao de credito, direto no site. Sem sair da pagina, sem chamar no PV, sem burocracia. Assim que aprovado, entrega automatica no chat." },
+    { q: "Voces vendem ativo pra outras plataformas?", a: "Sim, temos catalogo separado para Meta Ads, TikTok Ads e Google Ads. Cada plataforma com seu catalogo proprio, sem mistura de produto." },
+    { q: "Tem desconto pra compra em volume?", a: "Sim. Se voce compra 5+ ativos por mes, entra em contato pelo WhatsApp que fazemos condicao especial. Pra players em escala, temos combos exclusivos." },
   ];
   return (
     <section id="faq">
@@ -445,14 +505,14 @@ function CtaFinal() {
   return (
     <section className="cta-final" id="contato">
       <div className="container">
-        <h2>Sua proxima <span>campanha lucrativa</span> comeca agora.</h2>
-        <p>Analise gratuita da sua conta em ate 48h. Sem compromisso, sem venda forcada — se nao fizer sentido, a gente fala.</p>
+        <h2>Sua proxima <span className="grad">campanha</span> comeca agora.</h2>
+        <p>Ativo testado, preco na tela e entrega no chat em minutos. Escolheu, pagou, subiu campanha.</p>
         <div className="cta-actions">
-          <a href="https://wa.me/5511999999999?text=Ola%2C%20vim%20do%20site%20e%20quero%20uma%20analise%20gratuita" target="_blank" rel="noopener" className="btn-primary">
-            Chamar no WhatsApp
+          <a href="https://wa.me/5511999999999?text=Ola%2C%20vim%20do%20site%20e%20quero%20comprar%20um%20ativo" target="_blank" rel="noopener" className="btn-primary">
+            Falar no WhatsApp
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </a>
-          <a href="#servicos" className="btn-secondary">Ver planos</a>
+          <a href="#catalogo" className="btn-secondary">Ver catalogo</a>
         </div>
       </div>
     </section>
@@ -465,18 +525,15 @@ function Footer() {
       <div className="container">
         <div className="footer-inner">
           <div className="footer-brand">
-            <div className="logo">
-              <span className="logo-badge">GA</span>
-              <span>Ativos</span>
-            </div>
-            <p className="footer-desc">Gestao de trafego pago em Google Ads focada em ROI real. Auditamos, estruturamos e escalamos.</p>
+            <Logo />
+            <p className="footer-desc">Ativos para operacoes de trafego pago no Google Ads. Pagou no site, recebeu no chat.</p>
           </div>
           <div>
-            <h4>Servicos</h4>
+            <h4>Catalogo</h4>
             <ul>
-              <li><a href="#servicos">Starter</a></li>
-              <li><a href="#servicos">Growth</a></li>
-              <li><a href="#servicos">Enterprise</a></li>
+              <li><a href="#catalogo">Contas Google Ads</a></li>
+              <li><a href="#catalogo">Gmails</a></li>
+              <li><a href="#catalogo">Combos</a></li>
             </ul>
           </div>
           <div>
@@ -491,13 +548,13 @@ function Footer() {
             <h4>Contato</h4>
             <ul>
               <li>contato@gaativos.com.br</li>
-              <li>Seg–Sex 9h–19h</li>
+              <li>Chat 24/7 no pedido</li>
             </ul>
           </div>
         </div>
         <div className="footer-baixo">
-          <div>© 2026 GA Ativos · Gestao de trafego pago</div>
-          <div>Operacao etica · Sem promessa milagrosa</div>
+          <div>© 2026 GA Ativos · Ativos para trafego pago</div>
+          <div>Operacao etica · Suporte humano</div>
         </div>
       </div>
     </footer>
