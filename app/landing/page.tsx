@@ -212,7 +212,7 @@ function Logo() {
   return (
     <div className="logo">
       <span className="logo-g"></span>
-      <span>a<span className="logo-a"> ativos</span></span>
+      <span className="logo-a">ATIVOS</span>
     </div>
   );
 }
@@ -274,7 +274,7 @@ function Beneficios() {
     <section className="beneficios" id="beneficios">
       <div className="container">
         <div className="beneficios-header">
-          <div className="section-eyebrow">Por que GA Ativos</div>
+          <div className="section-eyebrow">Por que G Ativos</div>
           <h2 className="section-titulo">Feito pra sua operacao nao parar.</h2>
           <p className="section-sub">Ativos separados por plataforma. Sem mistura, sem improviso.</p>
         </div>
@@ -547,13 +547,13 @@ function Footer() {
           <div>
             <h4>Contato</h4>
             <ul>
-              <li>contato@gaativos.com.br</li>
+              <li>contato@gativos.com.br</li>
               <li>Chat 24/7 no pedido</li>
             </ul>
           </div>
         </div>
         <div className="footer-baixo">
-          <div>© 2026 GA Ativos · Ativos para trafego pago</div>
+          <div>© 2026 G Ativos · Ativos para trafego pago</div>
           <div>Operacao etica · Suporte humano</div>
         </div>
       </div>
