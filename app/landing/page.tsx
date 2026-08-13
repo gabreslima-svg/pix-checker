@@ -21,7 +21,6 @@ export default function LandingPage() {
         button { cursor: pointer; font-family: inherit; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 
-        /* LOGO GA estilo Google */
         .logo { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
         .logo-g {
           width: 36px; height: 36px; border-radius: 50%;
@@ -30,30 +29,15 @@ export default function LandingPage() {
           position: relative;
           box-shadow: 0 0 20px rgba(66,133,244,0.25);
         }
-        .logo-g::before {
-          content: '';
-          position: absolute;
-          inset: 4px;
-          border-radius: 50%;
-          background: var(--bg);
-        }
+        .logo-g::before { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: var(--bg); }
         .logo-g::after {
-          content: 'G';
-          position: relative; z-index: 1;
-          font-family: 'Inter', sans-serif;
-          font-weight: 700;
-          font-size: 20px;
+          content: 'G'; position: relative; z-index: 1;
+          font-family: 'Inter', sans-serif; font-weight: 700; font-size: 20px;
           background: linear-gradient(135deg, var(--google-blue) 0%, var(--google-green) 33%, var(--google-yellow) 66%, var(--google-red) 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
           letter-spacing: -0.03em;
         }
-        .logo-a {
-          background: linear-gradient(135deg, var(--google-blue), var(--google-green));
-          -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-          font-weight: 800;
-        }
+        .logo-a { background: linear-gradient(135deg, var(--google-blue), var(--google-green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 800; }
 
         .nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,10,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--cinza-borda); }
         .nav-inner { display: flex; justify-content: space-between; align-items: center; height: 72px; }
@@ -69,10 +53,7 @@ export default function LandingPage() {
         .hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #10B981; box-shadow: 0 0 8px #10B981; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .hero h1 { font-size: clamp(46px, 7.5vw, 88px); font-weight: 800; line-height: 0.98; letter-spacing: -0.04em; margin-bottom: 32px; max-width: 950px; margin-left: auto; margin-right: auto; position: relative; z-index: 1; }
-        .hero h1 .grad {
-          background: linear-gradient(135deg, var(--google-blue) 0%, var(--google-green) 50%, var(--google-yellow) 100%);
-          -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-        }
+        .hero h1 .grad { background: linear-gradient(135deg, var(--google-blue) 0%, var(--google-green) 50%, var(--google-yellow) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .hero-sub { font-size: 19px; color: var(--cinza-1); max-width: 640px; margin: 0 auto 48px; line-height: 1.55; position: relative; z-index: 1; }
         .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 80px; position: relative; z-index: 1; }
         .btn-primary { background: var(--azul); color: var(--branco); padding: 16px 32px; border-radius: 10px; font-size: 15px; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; box-shadow: 0 4px 20px rgba(66,133,244,0.3); }
@@ -196,9 +177,9 @@ export default function LandingPage() {
 
       <Nav />
       <Hero />
-      <Benefícios />
+      <Beneficios />
       <ComoFunciona />
-      <Catálogo />
+      <Catalogo />
       <Stats />
       <Depoimentos />
       <Faq />
@@ -263,7 +244,7 @@ function Hero() {
   );
 }
 
-function Benefícios() {
+function Beneficios() {
   const beneficios = [
     { icone: "M13 2L3 14h9l-1 8 10-12h-9l1-8z", titulo: "Entrega imediata", desc: "Pagou, o ativo cai no chat do pedido. Sem esperar atendente, sem burocracia." },
     { icone: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", titulo: "Testado antes", desc: "Cada conta passa por verificação. Você não recebe ativo cru pra descobrir problema depois." },
@@ -298,10 +279,10 @@ function Benefícios() {
 
 function ComoFunciona() {
   const passos = [
-    { num: "01", titulo: "Escolha o ativo", desc: "Catálogo com preco, especificacao e estoque na tela. Compara e decide na hora." },
+    { num: "01", titulo: "Escolha o ativo", desc: "Catálogo com preço, especificação e estoque na tela. Compara e decide na hora." },
     { num: "02", titulo: "Finalize a compra", desc: "Checkout no próprio site. Pix ou cartão, sem sair da página." },
     { num: "03", titulo: "Receba na hora", desc: "Ativo entregue automaticamente no chat do pedido, em minutos após o pagamento." },
-    { num: "04", titulo: "Suba campanha", desc: "Suporte no chat se precisar. Escala com um ativo testado e no seu painel." },
+    { num: "04", titulo: "Suba campanha", desc: "Suporte no chat se precisar. Escala com um ativo testado no seu painel." },
   ];
   return (
     <section id="como-funciona">
@@ -323,58 +304,59 @@ function ComoFunciona() {
   );
 }
 
-function Catálogo() {
+function Catalogo() {
   const ativos = [
     {
-      tag: "Google Ads",
-      titulo: "Conta Google Ads Aquecida",
-      desc: "Conta pronta pra rodar campanha desde o primeiro anúncio.",
-      precoAntigo: "R$ 299,99",
-      preco: "249,99",
-      precoInfo: "único",
-      estoque: "42 em estoque",
-      items: [
-        "Conta Google Ads verificada",
-        "Histórico de aquecimento (7 dias)",
-        "Cartão vinculado + faturamento configurado",
-        "Sem limite diário inicial travado",
-        "Suporte pós venda de 7 dias",
-      ],
-      cta: "Comprar agora",
-      destaque: false,
-    },
-    {
-      tag: "Combo",
-      titulo: "Combo Google Ads Start",
-      desc: "Estrutura completa pra começar operação no Google Ads sem dor de cabeça.",
-      precoAntigo: "R$ 599,99",
-      preco: "449,99",
-      precoInfo: "único",
-      estoque: "18 em estoque",
-      items: [
-        <><strong>2x</strong> Conta Google Ads Aquecida</>,
-        <><strong>2x</strong> Gmail Brasil verificado</>,
-        <><strong>1x</strong> Cartão virtual vinculado</>,
-        <><strong>1x</strong> Manager Account (MCC) configurada</>,
-        "Suporte pós venda de 15 dias",
-      ],
-      cta: "Comprar combo",
-      destaque: true,
-    },
-    {
       tag: "Gmail",
-      titulo: "Gmail Brasil Verificado",
-      desc: "Gmail pronto pra criar contas de anúncio, com verificação completa.",
-      precoAntigo: "R$ 89,99",
-      preco: "69,99",
-      precoInfo: "único",
+      titulo: "Gmail Aquecido",
+      desc: "Gmail pronto pra criar contas de anúncio e operar sem restrição.",
+      precoAntigo: "R$ 49,00",
+      preco: "30",
+      precoInfo: "por unidade",
       estoque: "156 em estoque",
       items: [
         "Conta Gmail Brasil",
         "Telefone verificado",
         "IP residencial de criação",
-        "Recovery email configurado",
+        <><strong>Aquecimento realizado</strong> antes da entrega</>,
         "Sem restrição no primeiro login",
+      ],
+      cta: "Comprar agora",
+      destaque: false,
+    },
+    {
+      tag: "Mais vendido",
+      titulo: "Conta Google Ads Verificada",
+      desc: "Conta pronta pra rodar campanha com verificação de anunciante e aquecimento.",
+      precoAntigo: "R$ 299,00",
+      preco: "200",
+      precoInfo: "único",
+      estoque: "38 em estoque",
+      items: [
+        <><strong>✅ Verificação de Anunciante</strong> Completa</>,
+        <><strong>✅ Aquecimento de Conta 🔥</strong></>,
+        "Conta Google Ads Brasil",
+        "Cartão vinculado + faturamento configurado",
+        "Suporte pós-venda de 7 dias",
+      ],
+      cta: "Comprar agora",
+      destaque: true,
+    },
+    {
+      tag: "Completa",
+      titulo: "Conta Google Ads Completa",
+      desc: "Estrutura completa pra rodar em nicho sensível sem cair na primeira análise.",
+      precoAntigo: "R$ 699,00",
+      preco: "500",
+      precoInfo: "único",
+      estoque: "12 em estoque",
+      items: [
+        <><strong>✅ Verificação de Anunciante</strong> Completa</>,
+        <><strong>✅ Verificação G2 Bancária</strong> — totalmente autêntica</>,
+        <><strong>✅ Serviços Financeiros</strong> com documentação verificada</>,
+        <><strong>✅ Pronta para gastos</strong> — sem limitações</>,
+        <><strong>✅ Aquecimento garantido 🔥</strong></>,
+        "Suporte pós-venda de 15 dias",
       ],
       cta: "Comprar agora",
       destaque: false,
@@ -386,7 +368,7 @@ function Catálogo() {
         <div className="catalogo-titulo">
           <div className="section-eyebrow">Catálogo</div>
           <h2 className="section-titulo">Ativos para Google Ads.</h2>
-          <p className="section-sub">Preço na tela, estoque real. Se ta listado, ta disponivel pra entrega imediata.</p>
+          <p className="section-sub">Preço na tela, estoque real. Se tá listado, tá disponível pra entrega imediata.</p>
         </div>
         <div className="catalogo-grid">
           {ativos.map((a) => (
@@ -426,7 +408,7 @@ function Stats() {
         <div className="stats-grid">
           <div className="stat"><div className="stat-num"><span>3.2k+</span></div><div className="stat-label">Ativos entregues</div></div>
           <div className="stat"><div className="stat-num"><span>98%</span></div><div className="stat-label">Ativos aprovados no primeiro uso</div></div>
-          <div className="stat"><div className="stat-num"><span>&lt;5min</span></div><div className="stat-label">Tempo médio de entrega</div></div>
+          <div className="stat"><div className="stat-num"><span>{"<"}5min</span></div><div className="stat-label">Tempo médio de entrega</div></div>
           <div className="stat"><div className="stat-num"><span>24/7</span></div><div className="stat-label">Chat de pedidos disponível</div></div>
         </div>
       </div>
@@ -436,9 +418,9 @@ function Stats() {
 
 function Depoimentos() {
   const deps = [
-    { texto: "Comprei o combo start e já subi campanha no mesmo dia. Ativo entregue em 3 minutos, tudo funcionando na primeira. Melhor que 90% dos fornecedores que testei.", nome: "Juliano Marques", cargo: "Player · E-commerce" },
+    { texto: "Comprei o combo e já subi campanha no mesmo dia. Ativo entregue em 3 minutos, tudo funcionando na primeira. Melhor que 90% dos fornecedores que testei.", nome: "Juliano Marques", cargo: "Player · E-commerce" },
     { texto: "Comprei 5 contas já e não tive nenhum problema. Preço justo, ativo bom, suporte responde na hora. Passei a comprar só aqui pra escala.", nome: "Renata Souza", cargo: "Media Buyer · Info" },
-    { texto: "Fugir do PV foi o melhor. Preço na tela, checkout no site, ativo no chat. Do jeito que operacao de verdade tem que ser.", nome: "Lucas Pereira", cargo: "Gestor · Agencia" },
+    { texto: "Fugir do PV foi o melhor. Preço na tela, checkout no site, ativo no chat. Do jeito que operação de verdade tem que ser.", nome: "Lucas Pereira", cargo: "Gestor · Agência" },
   ];
   return (
     <section className="depoimentos">
@@ -475,7 +457,7 @@ function Faq() {
     { q: "Os ativos vêm testados mesmo?", a: "Sim. Cada conta passa por verificação antes de entrar no estoque: login, aquecimento, histórico de navegação, telefone verificado. Você não recebe ativo cru." },
     { q: "E se der problema no ativo?", a: "Você tem período de garantia pós-venda (7 a 15 dias dependendo do produto). Nesse período, se o ativo cair, damos substituição gratuita. Só mandar print no chat do pedido." },
     { q: "Como faço o pagamento?", a: "Pix ou cartão de crédito, direto no site. Sem sair da página, sem chamar no PV, sem burocracia. Assim que aprovado, entrega automática no chat." },
-    { q: "Vocês vendem ativo pra outras plataformas?", a: "Sim, temos catálogo separado para Meta Ads, TikTok Ads e Google Ads. Cada plataforma com seu catálogo próprio, sem mistura de produto." },
+    { q: "Vocês vendem ativo pra outras plataformas?", a: "Focamos em Google Ads. Se precisar de outras plataformas, chama no WhatsApp que a gente indica parceiros de confiança." },
     { q: "Tem desconto pra compra em volume?", a: "Sim. Se você compra 5+ ativos por mês, entra em contato pelo WhatsApp que fazemos condição especial. Pra players em escala, temos combos exclusivos." },
   ];
   return (
@@ -508,7 +490,7 @@ function CtaFinal() {
         <h2>Sua próxima <span className="grad">campanha</span> começa agora.</h2>
         <p>Ativo testado, preço na tela e entrega no chat em minutos. Escolheu, pagou, subiu campanha.</p>
         <div className="cta-actions">
-          <a href="https://wa.me/5511999999999?text=Ola%2C%20vim%20do%20site%20e%20quero%20comprar%20um%20ativo" target="_blank" rel="noopener" className="btn-primary">
+          <a href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20vim%20do%20site%20e%20quero%20comprar%20um%20ativo" target="_blank" rel="noopener" className="btn-primary">
             Falar no WhatsApp
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </a>
