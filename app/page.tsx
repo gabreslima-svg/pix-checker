@@ -98,10 +98,11 @@ export default function LandingPage() {
         .catalogo { background: var(--bg-2); border-top: 1px solid var(--cinza-borda); border-bottom: 1px solid var(--cinza-borda); }
         .catalogo-titulo { text-align: center; margin-bottom: 64px; }
         .catalogo-titulo .section-titulo, .catalogo-titulo .section-sub { margin-left: auto; margin-right: auto; }
-        .catalogo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .catalogo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
         .ativo { padding: 32px; background: var(--bg-3); border: 1px solid var(--cinza-borda); border-radius: 20px; transition: all 0.3s; display: flex; flex-direction: column; }
         .ativo:hover { border-color: var(--azul); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(66,133,244,0.08); }
         .ativo.destaque { background: linear-gradient(180deg, rgba(66,133,244,0.08) 0%, var(--bg-3) 100%); border-color: rgba(66,133,244,0.4); position: relative; }
+        .ativo-badge-recuperacao { position: absolute; top: 20px; right: 20px; background: linear-gradient(135deg, #10B981, #059669); padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; color: var(--branco); }
         .ativo.destaque::before { content: 'MAIS PROCURADO'; position: absolute; top: 20px; right: 20px; background: var(--azul); padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; }
         .ativo-tag { font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--azul-claro); font-weight: 600; margin-bottom: 12px; }
         .ativo h3 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
@@ -121,7 +122,7 @@ export default function LandingPage() {
         .ativo-cta:hover { background: var(--azul); border-color: var(--azul); }
         .ativo.destaque .ativo-cta { background: var(--azul); border-color: var(--azul); }
         .ativo.destaque .ativo-cta:hover { background: var(--azul-claro); }
-        @media (max-width: 900px) { .catalogo-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 1100px) { .catalogo-grid { grid-template-columns: repeat(2, 1fr); } } @media (max-width: 640px) { .catalogo-grid { grid-template-columns: 1fr; } }
 
         .stats { background: var(--bg); }
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding: 60px 0; border-top: 1px solid var(--cinza-borda); border-bottom: 1px solid var(--cinza-borda); }
@@ -362,18 +363,39 @@ function Catalogo() {
       cta: "Comprar agora",
       destaque: false,
     },
+      {
+      tag: "Recuperacao",
+      titulo: "Recuperacao de Conta Suspensa",
+      desc: "Sua conta Google Ads foi suspensa? A gente tenta trazer de volta e voce so paga se reativar.",
+      precoAntigo: "R$ 350,00",
+      preco: "200",
+      precoInfo: "so paga se reativar",
+      estoque: "Disponivel agora",
+      items: [
+        <><strong>✅ Sem risco</strong> — pagamento so apos a reativacao</>,
+        <><strong>✅ Analise gratuita</strong> do motivo da suspensao</>,
+        <><strong>✅ Recurso completo</strong> feito por especialistas</>,
+        <><strong>✅ Contato direto com Google</strong> quando necessario</>,
+        "Prazo medio: 3 a 7 dias uteis",
+        "Nao reativou = nao paga nada",
+      ],
+      cta: "Recuperar minha conta",
+      destaque: false,
+      badge: "SEM RISCO",
+    },
   ];
   return (
     <section className="catalogo" id="catalogo">
       <div className="container">
         <div className="catalogo-titulo">
           <div className="section-eyebrow">Catálogo</div>
-          <h2 className="section-titulo">Ativos para Google Ads.</h2>
-          <p className="section-sub">Preço na tela, estoque real. Se tá listado, tá disponível pra entrega imediata.</p>
+          <h2 className="section-titulo">Ativos e servicos para Google Ads.</h2>
+          <p className="section-sub">Preco na tela, estoque real. Se ta listado, ta disponivel — pra entrega imediata ou recuperacao de contas.</p>
         </div>
         <div className="catalogo-grid">
           {ativos.map((a) => (
-            <div className={`ativo ${a.destaque ? 'destaque' : ''}`} key={a.titulo}>
+            <div className={`ativo ${a.destaque ? 'destaque' : ''}`} key={a.titulo} style={{ position: 'relative' }}>
+              {a.badge && <div className="ativo-badge-recuperacao">{a.badge}</div>}
               <div className="ativo-tag">{a.tag}</div>
               <h3>{a.titulo}</h3>
               <div className="ativo-desc">{a.desc}</div>
