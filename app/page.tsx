@@ -491,7 +491,7 @@ function CtaFinal() {
         <h2>Sua próxima <span className="grad">campanha</span> começa agora.</h2>
         <p>Ativo testado, preço na tela e entrega no chat em minutos. Escolheu, pagou, subiu campanha.</p>
         <div className="cta-actions">
-          <a href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20vim%20do%20site%20e%20quero%20comprar%20um%20ativo" target="_blank" rel="noopener" className="btn-primary">
+          <a href="https://wa.me/5516988297943?text=Ol%C3%A1%2C%20vim%20do%20site%20e%20quero%20comprar%20um%20ativo" target="_blank" rel="noopener" className="btn-primary">
             Falar no WhatsApp
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </a>
