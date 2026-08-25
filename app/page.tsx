@@ -311,6 +311,7 @@ function Catalogo() {
     {
       tag: "Gmail",
       titulo: "Gmail Aquecido",
+      link: "https://pay.imperiumpay.com.br/c/uW7B38zUyUMq4a5d",
       desc: "Gmail pronto pra criar contas de anúncio e operar sem restrição.",
       precoAntigo: "R$ 49,00",
       preco: "30",
@@ -329,6 +330,7 @@ function Catalogo() {
     {
       tag: "Mais vendido",
       titulo: "Conta Google Ads Verificada",
+      link: "https://pay.imperiumpay.com.br/c/Dyf9LDeGwZdCzIQh",
       desc: "Conta pronta pra rodar campanha com verificação de anunciante e aquecimento.",
       precoAntigo: "R$ 299,00",
       preco: "200",
@@ -347,6 +349,7 @@ function Catalogo() {
     {
       tag: "Completa",
       titulo: "Conta Google Ads Completa",
+      link: "https://pay.imperiumpay.com.br/c/TzKeAI0RDXGSDNrc",
       desc: "Estrutura completa pra rodar em nicho sensível sem cair na primeira análise.",
       precoAntigo: "R$ 699,00",
       preco: "500",
@@ -366,6 +369,7 @@ function Catalogo() {
       {
       tag: "Recuperacao",
       titulo: "Recuperacao de Conta Suspensa",
+      link: "https://pay.imperiumpay.com.br/c/ze4ukA4XfW9UDXAg",
       desc: "Sua conta Google Ads foi suspensa? A gente tenta trazer de volta e voce so paga se reativar.",
       precoAntigo: "R$ 350,00",
       preco: "200",
@@ -415,7 +419,7 @@ function Catalogo() {
                   </li>
                 ))}
               </ul>
-              <a href="#contato" className="ativo-cta">{a.cta}</a>
+              <a href={a.link} target="_blank" rel="noopener noreferrer" className="ativo-cta">{a.cta}</a>
             </div>
           ))}
         </div>
