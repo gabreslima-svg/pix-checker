@@ -50,27 +50,6 @@ export default function YouFlixLanding() {
         @media (max-width: 768px) { .nav-links { display: none; } }
 
         /* HERO */
-        .hero {
-          padding: 100px 0 80px;
-          position: relative;
-          overflow: hidden;
-          background-image: url('/youflix-fundo.jpg');
-          background-size: cover;
-          background-position: center top;
-          background-repeat: no-repeat;
-          image-rendering: -webkit-optimize-contrast;
-          image-rendering: crisp-edges;
-        }
-        .hero::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background:
-            linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.7) 60%, rgba(10,10,10,0.85) 100%),
-            linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 60%);
-          pointer-events: none;
-          z-index: 0;
-        }
         .hero::before {
           content: '';
           position: absolute;
@@ -91,6 +70,15 @@ export default function YouFlixLanding() {
           z-index: 0;
         }
         .hero-inner { display: grid; grid-template-columns: 1.1fr 1fr; gap: 60px; align-items: center; position: relative; z-index: 1; }
+        .hero {
+          padding: 100px 0 80px;
+          position: relative;
+          overflow: hidden;
+          background: #0a0a0a url('/youflix-fundo.jpg') center/cover no-repeat;
+        }
+        
+        
+        
         .hero-badge {
           display: inline-flex; align-items: center; gap: 8px;
           padding: 8px 16px; border: 1px solid rgba(245,158,11,0.3);
