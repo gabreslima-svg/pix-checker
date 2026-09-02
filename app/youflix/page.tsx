@@ -74,7 +74,11 @@ export default function YouFlixLanding() {
           padding: 50px 0 40px;
           position: relative;
           overflow: hidden;
-          background: #0a0a0a url('/youflix-bg.jpg') center/cover no-repeat;
+          background-color: #0a0a0a;
+          background-image: url('/youflix-bg.jpg');
+          background-size: 100% auto;
+          background-position: center top;
+          background-repeat: no-repeat;
         }
         
         
