@@ -56,8 +56,20 @@ export default function YouFlixLanding() {
           overflow: hidden;
           background-image: url('/youflix-fundo.jpg');
           background-size: cover;
-          background-position: center;
+          background-position: center top;
           background-repeat: no-repeat;
+          image-rendering: -webkit-optimize-contrast;
+          image-rendering: crisp-edges;
+        }
+        .hero::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.7) 60%, rgba(10,10,10,0.85) 100%),
+            linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 60%);
+          pointer-events: none;
+          z-index: 0;
         }
         .hero::before {
           content: '';
@@ -69,6 +81,7 @@ export default function YouFlixLanding() {
           pointer-events: none;
           z-index: 0;
         }
+        .hero .container { position: relative; z-index: 1; }
         .hero::after {
           content: '';
           position: absolute; top: -100px; right: -200px;
