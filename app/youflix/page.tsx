@@ -53,9 +53,10 @@ export default function YouFlixLanding() {
         .hero::before {
           content: '';
           position: absolute;
-          top: -100px; left: -200px;
-          width: 800px; height: 800px;
-          background: radial-gradient(circle, rgba(199,1,2,0.18) 0%, transparent 60%);
+          inset: 0;
+          background:
+            linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.7) 60%, rgba(10,10,10,0.9) 100%),
+            linear-gradient(90deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.15) 60%);
           pointer-events: none;
           z-index: 0;
         }
@@ -73,7 +74,7 @@ export default function YouFlixLanding() {
           padding: 80px 0 60px;
           position: relative;
           overflow: hidden;
-          background: var(--bg);
+          background: #0a0a0a url('/youflix-bg.jpg') center/cover no-repeat;
         }
         
         
