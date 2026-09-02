@@ -12,9 +12,9 @@ export default function YouFlixLanding() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap');
         :root {
-          --bg: #200186;
-          --bg-2: #2a0aa0;
-          --bg-3: #3612b8;
+          --bg: #0a0a0a;
+          --bg-2: #111111;
+          --bg-3: #1a1a1a;
           --roxo: #C70102;
           --roxo-claro: #FF3B3B;
           --roxo-glow: rgba(199, 1, 2, 0.25);
@@ -24,7 +24,7 @@ export default function YouFlixLanding() {
           --branco: #FFFFFF;
           --cinza-1: #A3A3A3;
           --cinza-2: #737373;
-          --cinza-borda: #4020cc;
+          --cinza-borda: #262626;
           --verde: #10B981;
           --sans: 'Inter', system-ui, sans-serif;
           --serif: 'Instrument Serif', Georgia, serif;
@@ -50,18 +50,32 @@ export default function YouFlixLanding() {
         @media (max-width: 768px) { .nav-links { display: none; } }
 
         /* HERO */
-        .hero { padding: 80px 0 60px; position: relative; overflow: hidden; }
+        .hero {
+          padding: 100px 0 80px;
+          position: relative;
+          overflow: hidden;
+          background-image: url('/youflix-fundo.jpg');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+        }
         .hero::before {
-          content: ''; position: absolute; top: -300px; left: -200px;
-          width: 900px; height: 900px;
-          background: radial-gradient(circle, var(--roxo-glow) 0%, transparent 60%);
+          content: '';
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.75) 60%, rgba(10,10,10,1) 100%),
+            linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 60%);
           pointer-events: none;
+          z-index: 0;
         }
         .hero::after {
-          content: ''; position: absolute; top: -200px; right: -300px;
-          width: 800px; height: 800px;
-          background: radial-gradient(circle, rgba(199,1,2,0.15) 0%, transparent 60%);
+          content: '';
+          position: absolute; top: -100px; right: -200px;
+          width: 700px; height: 700px;
+          background: radial-gradient(circle, rgba(199,1,2,0.25) 0%, transparent 60%);
           pointer-events: none;
+          z-index: 0;
         }
         .hero-inner { display: grid; grid-template-columns: 1.1fr 1fr; gap: 60px; align-items: center; position: relative; z-index: 1; }
         .hero-badge {
@@ -81,6 +95,7 @@ export default function YouFlixLanding() {
           font-size: clamp(40px, 5vw, 66px);
           font-weight: 800; line-height: 1.02;
           letter-spacing: -0.04em; margin-bottom: 24px;
+          text-shadow: 0 2px 20px rgba(0,0,0,0.8);
         }
         .hero h1 .strike { color: var(--cinza-2); text-decoration: line-through; text-decoration-thickness: 4px; text-decoration-color: var(--vermelho); }
         .hero h1 .grad {
@@ -88,8 +103,9 @@ export default function YouFlixLanding() {
           -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
         .hero-sub {
-          font-size: 18px; color: var(--cinza-1);
+          font-size: 18px; color: #E5E5E5;
           margin-bottom: 32px; line-height: 1.55; max-width: 520px;
+          text-shadow: 0 2px 12px rgba(0,0,0,0.7);
         }
         .hero-sub strong { color: var(--branco); }
         .preco-box {
@@ -128,7 +144,7 @@ export default function YouFlixLanding() {
         /* MOCKUP TV NO HERO */
         .mockup { position: relative; perspective: 1200px; }
         .mockup-tv {
-          background: linear-gradient(135deg, #150055 0%, #1a0466 100%);
+          background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
           border-radius: 20px; padding: 20px 16px; box-shadow: 0 25px 60px rgba(199,1,2,0.35), 0 0 0 1px rgba(199,1,2,0.15);
           transform: rotateY(-8deg) rotateX(4deg);
           position: relative;
