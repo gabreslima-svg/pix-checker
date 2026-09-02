@@ -71,14 +71,10 @@ export default function YouFlixLanding() {
         }
         .hero-inner { display: grid; grid-template-columns: 1.1fr 1fr; gap: 60px; align-items: center; position: relative; z-index: 1; }
         .hero {
-          padding: 50px 0 40px;
+          padding: 80px 0 60px;
           position: relative;
           overflow: hidden;
-          background-color: #0a0a0a;
-          background-image: url('/youflix-bg.jpg');
-          background-size: 100% auto;
-          background-position: center top;
-          background-repeat: no-repeat;
+          background: #0a0a0a;
         }
         
         
