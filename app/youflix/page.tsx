@@ -12,19 +12,19 @@ export default function YouFlixLanding() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap');
         :root {
-          --bg: #0a0612;
-          --bg-2: #14091f;
-          --bg-3: #1c0f2a;
-          --roxo: #7C3AED;
-          --roxo-claro: #A78BFA;
-          --roxo-glow: rgba(124, 58, 237, 0.25);
-          --vermelho: #DC2626;
-          --vermelho-claro: #EF4444;
+          --bg: #200186;
+          --bg-2: #2a0aa0;
+          --bg-3: #3612b8;
+          --roxo: #C70102;
+          --roxo-claro: #FF3B3B;
+          --roxo-glow: rgba(199, 1, 2, 0.25);
+          --vermelho: #C70102;
+          --vermelho-claro: #E01820;
           --dourado: #F59E0B;
           --branco: #FFFFFF;
           --cinza-1: #A3A3A3;
           --cinza-2: #737373;
-          --cinza-borda: #2A1F3A;
+          --cinza-borda: #4020cc;
           --verde: #10B981;
           --sans: 'Inter', system-ui, sans-serif;
           --serif: 'Instrument Serif', Georgia, serif;
@@ -45,8 +45,8 @@ export default function YouFlixLanding() {
         .badge-oficial { font-size: 10px; padding: 3px 8px; background: rgba(16,185,129,0.15); color: var(--verde); border-radius: 4px; font-weight: 600; margin-left: 8px; letter-spacing: 0.05em; }
         .nav-links { display: flex; gap: 28px; font-size: 14px; color: var(--cinza-1); font-weight: 500; }
         .nav-links a:hover { color: var(--branco); }
-        .nav-cta { background: linear-gradient(135deg, var(--vermelho), var(--roxo)); color: var(--branco); padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 20px rgba(124,58,237,0.3); }
-        .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(124,58,237,0.4); }
+        .nav-cta { background: linear-gradient(135deg, var(--vermelho), var(--roxo)); color: var(--branco); padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 20px rgba(199,1,2,0.3); }
+        .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(199,1,2,0.4); }
         @media (max-width: 768px) { .nav-links { display: none; } }
 
         /* HERO */
@@ -60,7 +60,7 @@ export default function YouFlixLanding() {
         .hero::after {
           content: ''; position: absolute; top: -200px; right: -300px;
           width: 800px; height: 800px;
-          background: radial-gradient(circle, rgba(220,38,38,0.15) 0%, transparent 60%);
+          background: radial-gradient(circle, rgba(199,1,2,0.15) 0%, transparent 60%);
           pointer-events: none;
         }
         .hero-inner { display: grid; grid-template-columns: 1.1fr 1fr; gap: 60px; align-items: center; position: relative; z-index: 1; }
@@ -109,9 +109,9 @@ export default function YouFlixLanding() {
           color: var(--branco); padding: 16px 28px; border-radius: 10px;
           font-size: 15px; font-weight: 700; transition: all 0.2s;
           display: inline-flex; align-items: center; gap: 10px; border: none;
-          box-shadow: 0 8px 25px rgba(124,58,237,0.35);
+          box-shadow: 0 8px 25px rgba(199,1,2,0.35);
         }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(124,58,237,0.5); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(199,1,2,0.5); }
         .btn-primary svg { transition: transform 0.15s; }
         .btn-primary:hover svg { transform: translateX(4px); }
         .btn-secondary {
@@ -128,8 +128,8 @@ export default function YouFlixLanding() {
         /* MOCKUP TV NO HERO */
         .mockup { position: relative; perspective: 1200px; }
         .mockup-tv {
-          background: linear-gradient(135deg, #1a1a2e 0%, #16162b 100%);
-          border-radius: 20px; padding: 20px 16px; box-shadow: 0 25px 60px rgba(124,58,237,0.35), 0 0 0 1px rgba(124,58,237,0.15);
+          background: linear-gradient(135deg, #150055 0%, #1a0466 100%);
+          border-radius: 20px; padding: 20px 16px; box-shadow: 0 25px 60px rgba(199,1,2,0.35), 0 0 0 1px rgba(199,1,2,0.15);
           transform: rotateY(-8deg) rotateX(4deg);
           position: relative;
         }
@@ -153,14 +153,14 @@ export default function YouFlixLanding() {
           overflow: hidden;
           animation: shimmer 3s ease-in-out infinite;
         }
-        .mockup-card:nth-child(1) { background: linear-gradient(135deg, #7C3AED, #DC2626); animation-delay: 0s; }
-        .mockup-card:nth-child(2) { background: linear-gradient(135deg, #F59E0B, #DC2626); animation-delay: 0.3s; }
-        .mockup-card:nth-child(3) { background: linear-gradient(135deg, #10B981, #7C3AED); animation-delay: 0.6s; }
-        .mockup-card:nth-child(4) { background: linear-gradient(135deg, #DC2626, #7C3AED); animation-delay: 0.9s; }
-        .mockup-card:nth-child(5) { background: linear-gradient(135deg, #7C3AED, #F59E0B); animation-delay: 1.2s; }
-        .mockup-card:nth-child(6) { background: linear-gradient(135deg, #DC2626, #10B981); animation-delay: 1.5s; }
-        .mockup-card:nth-child(7) { background: linear-gradient(135deg, #7C3AED, #10B981); animation-delay: 1.8s; }
-        .mockup-card:nth-child(8) { background: linear-gradient(135deg, #F59E0B, #7C3AED); animation-delay: 2.1s; }
+        .mockup-card:nth-child(1) { background: linear-gradient(135deg, #C70102, #FF3B3B); animation-delay: 0s; }
+        .mockup-card:nth-child(2) { background: linear-gradient(135deg, #C70102, #FF6B00); animation-delay: 0.3s; }
+        .mockup-card:nth-child(3) { background: linear-gradient(135deg, #C70102, #FF3B3B); animation-delay: 0.6s; }
+        .mockup-card:nth-child(4) { background: linear-gradient(135deg, #C70102, #E01820); animation-delay: 0.9s; }
+        .mockup-card:nth-child(5) { background: linear-gradient(135deg, #FF6B00, #C70102); animation-delay: 1.2s; }
+        .mockup-card:nth-child(6) { background: linear-gradient(135deg, #C70102, #FF3B3B); animation-delay: 1.5s; }
+        .mockup-card:nth-child(7) { background: linear-gradient(135deg, #E01820, #C70102); animation-delay: 1.8s; }
+        .mockup-card:nth-child(8) { background: linear-gradient(135deg, #FF6B00, #C70102); animation-delay: 2.1s; }
         @keyframes shimmer {
           0%, 100% { opacity: 0.85; }
           50% { opacity: 1; }
@@ -211,7 +211,7 @@ export default function YouFlixLanding() {
         .categoria:hover::before { opacity: 1; }
         .categoria-icone {
           width: 48px; height: 48px; border-radius: 12px;
-          background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(220,38,38,0.2));
+          background: linear-gradient(135deg, rgba(199,1,2,0.2), rgba(199,1,2,0.2));
           display: flex; align-items: center; justify-content: center;
           margin-bottom: 20px; color: var(--roxo-claro);
         }
@@ -267,10 +267,10 @@ export default function YouFlixLanding() {
         }
         .oferta-card {
           background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg-3) 100%);
-          border: 1px solid rgba(124,58,237,0.3);
+          border: 1px solid rgba(199,1,2,0.3);
           border-radius: 24px; padding: 60px 40px; max-width: 620px;
           margin: 0 auto; position: relative; overflow: hidden;
-          box-shadow: 0 25px 60px rgba(124,58,237,0.2);
+          box-shadow: 0 25px 60px rgba(199,1,2,0.2);
         }
         .oferta-card::before {
           content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
