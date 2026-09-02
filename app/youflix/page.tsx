@@ -53,10 +53,9 @@ export default function YouFlixLanding() {
         .hero::before {
           content: '';
           position: absolute;
-          inset: 0;
-          background:
-            linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.75) 60%, rgba(10,10,10,1) 100%),
-            linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 60%);
+          top: -100px; left: -200px;
+          width: 800px; height: 800px;
+          background: radial-gradient(circle, rgba(199,1,2,0.18) 0%, transparent 60%);
           pointer-events: none;
           z-index: 0;
         }
@@ -71,13 +70,10 @@ export default function YouFlixLanding() {
         }
         .hero-inner { display: grid; grid-template-columns: 1.1fr 1fr; gap: 60px; align-items: center; position: relative; z-index: 1; }
         .hero {
-          padding: 60px 0 50px;
-          min-height: 480px;
-          display: flex;
-          align-items: center;
+          padding: 80px 0 60px;
           position: relative;
           overflow: hidden;
-          background: #0a0a0a url('/youflix-fundo.jpg') center/cover no-repeat;
+          background: var(--bg);
         }
         
         
@@ -199,6 +195,18 @@ export default function YouFlixLanding() {
         .mockup-live::before {
           content: ''; width: 4px; height: 4px; background: white; border-radius: 50%;
           animation: pulse 1.5s infinite;
+        }
+        .mockup-img {
+          width: 100%;
+          height: auto;
+          border-radius: 20px;
+          box-shadow: 0 25px 60px rgba(199,1,2,0.35), 0 0 0 1px rgba(199,1,2,0.2);
+          display: block;
+          transform: rotateY(-8deg) rotateX(4deg);
+          transition: transform 0.4s;
+        }
+        .mockup-img:hover {
+          transform: rotateY(-4deg) rotateX(2deg) scale(1.02);
         }
         @media (max-width: 900px) {
           .hero-inner { grid-template-columns: 1fr; }
@@ -406,26 +414,7 @@ function Hero() {
           </div>
 
           <div className="mockup">
-            <div className="mockup-tv">
-              <div className="mockup-header">
-                <div className="mockup-titulo">📺 YouFlix</div>
-                <div className="mockup-tabs">
-                  <div className="mockup-tab ativa">Ao vivo</div>
-                  <div className="mockup-tab">Filmes</div>
-                  <div className="mockup-tab">Series</div>
-                </div>
-              </div>
-              <div className="mockup-grid">
-                <div className="mockup-card"><div className="mockup-live">AO VIVO</div></div>
-                <div className="mockup-card"><div className="mockup-live">AO VIVO</div></div>
-                <div className="mockup-card"></div>
-                <div className="mockup-card"></div>
-                <div className="mockup-card"></div>
-                <div className="mockup-card"></div>
-                <div className="mockup-card"></div>
-                <div className="mockup-card"></div>
-              </div>
-            </div>
+            <img src="/youflix-fundo.jpg" alt="YouFlix - Catalogo" className="mockup-img" />
           </div>
         </div>
       </div>
