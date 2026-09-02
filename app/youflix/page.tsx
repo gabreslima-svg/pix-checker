@@ -71,7 +71,10 @@ export default function YouFlixLanding() {
         }
         .hero-inner { display: grid; grid-template-columns: 1.1fr 1fr; gap: 60px; align-items: center; position: relative; z-index: 1; }
         .hero {
-          padding: 100px 0 80px;
+          padding: 60px 0 50px;
+          min-height: 480px;
+          display: flex;
+          align-items: center;
           position: relative;
           overflow: hidden;
           background: #0a0a0a url('/youflix-fundo.jpg') center/cover no-repeat;
