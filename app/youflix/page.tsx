@@ -337,7 +337,7 @@ function Nav() {
     <nav className="nav">
       <div className="container nav-inner">
         <a href="#" className="logo">
-          <span className="logo-you">YOU</span><span className="logo-flix">FLIX</span>
+          <img src="/youflix-logo.png" alt="YouFlix" style={{ height: 40, width: 'auto' }} />
           <span className="badge-oficial">OFICIAL</span>
         </a>
         <div className="nav-links">
@@ -588,10 +588,7 @@ function Footer() {
       <div className="container">
         <div className="footer-inner">
           <div className="footer-brand">
-            <a href="#" className="logo">
-              <span className="logo-you">YOU</span><span className="logo-flix">FLIX</span>
-              <span className="badge-oficial">OFICIAL</span>
-            </a>
+            <a href="#" className="logo"><img src="/youflix-logo.png" alt="YouFlix" style={{ height: 40, width: "auto" }} /><span className="badge-oficial">OFICIAL</span></a>
             <p className="footer-desc">Credenciada oficial autorizada. Netflix, Prime, Globoplay, esportes e canais fechados em um so app por R$ 29,90/mes.</p>
           </div>
           <div>
