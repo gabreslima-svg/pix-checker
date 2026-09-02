@@ -367,7 +367,7 @@ function Nav() {
       <div className="container nav-inner">
         <a href="#" className="logo">
           <img src="/youflix-logo.png" alt="YouFlix" style={{ height: 40, width: 'auto' }} />
-          <span className="badge-oficial">OFICIAL</span>
+          
         </a>
         <div className="nav-links">
           <a href="#conteudo">Conteudo</a>
@@ -387,7 +387,6 @@ function Hero() {
       <div className="container">
         <div className="hero-inner">
           <div>
-            <div className="hero-badge">Credenciada oficial autorizada</div>
             <h1>
               Cansou de pagar <span className="strike">R$ 200/mes</span> em varios apps?
             </h1>
@@ -598,8 +597,8 @@ function Footer() {
       <div className="container">
         <div className="footer-inner">
           <div className="footer-brand">
-            <a href="#" className="logo"><img src="/youflix-logo.png" alt="YouFlix" style={{ height: 40, width: "auto" }} /><span className="badge-oficial">OFICIAL</span></a>
-            <p className="footer-desc">Credenciada oficial autorizada. Netflix, Prime, Globoplay, esportes e canais fechados em um so app por R$ 29,90/mes.</p>
+            <a href="#" className="logo"><img src="/youflix-logo.png" alt="YouFlix" style={{ height: 40, width: "auto" }} /></a>
+            <p className="footer-desc">Netflix, Prime, Globoplay, esportes e canais fechados em um so app por R$ 29,90/mes.</p>
           </div>
           <div>
             <h4>Navegacao</h4>
@@ -619,7 +618,7 @@ function Footer() {
           </div>
         </div>
         <div className="footer-baixo">
-          <div>© 2026 YouFlix · Credenciada oficial autorizada</div>
+          <div>© 2026 YouFlix · </div>
           <div>Sem fidelidade · Cancele quando quiser</div>
         </div>
       </div>
