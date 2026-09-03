@@ -381,10 +381,9 @@ function Hero() {
                 <div className="preco-periodo">por mês · cancele quando quiser</div>
               </div>
             </div>
-            </div>
             <div className="hero-actions">
               <a href={LINK_WHATSAPP} target="_blank" rel="noopener noreferrer" className="btn-primary">
-                Testar 12h gratis
+                Começar agora
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </a>
               <a href="#conteudo" className="btn-secondary">Explorar</a>
