@@ -197,19 +197,24 @@ export default function YouFlixLanding() {
             background-position: center;
             background-repeat: no-repeat;
             position: relative;
+            min-height: 100vh;
+            padding: 100px 0 80px;
+            display: flex;
+            align-items: center;
           }
           .hero::before {
             display: block !important;
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,0.95) 100%);
+            background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,0.9) 100%);
             pointer-events: none;
             z-index: 0;
           }
           .hero .container {
             position: relative;
             z-index: 1;
+            width: 100%;
           }
           .hero h1, .hero-sub, .hero-badge {
             text-shadow: 0 2px 20px rgba(0,0,0,0.9);
