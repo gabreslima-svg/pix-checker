@@ -12,9 +12,9 @@ export default function YouFlixLanding() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap');
         :root {
-          --bg: #0a0a0a;
-          --bg-2: #111111;
-          --bg-3: #1a1a1a;
+          --bg: #000000;
+          --bg-2: #0a0a0a;
+          --bg-3: #141414;
           --roxo: #C70102;
           --roxo-claro: #FF3B3B;
           --roxo-glow: rgba(199, 1, 2, 0.25);
@@ -37,7 +37,7 @@ export default function YouFlixLanding() {
         .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 
         /* NAV */
-        .nav { position: sticky; top: 0; z-index: 100; background: rgba(10,6,18,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--cinza-borda); }
+        .nav { position: sticky; top: 0; z-index: 100; background: #000000; backdrop-filter: blur(12px); border-bottom: 1px solid var(--cinza-borda); }
         .nav-inner { display: flex; justify-content: space-between; align-items: center; height: 72px; }
         .logo { display: flex; align-items: center; gap: 8px; font-size: 24px; font-weight: 900; letter-spacing: -0.03em; }
         .logo-you { color: var(--branco); }
@@ -50,18 +50,11 @@ export default function YouFlixLanding() {
         @media (max-width: 768px) { .nav-links { display: none; } }
 
         /* HERO */
-        .hero::before { content: ''; position: absolute; top: -100px; left: -200px; width: 800px; height: 800px; background: radial-gradient(circle, rgba(199,1,2,0.18) 0%, transparent 60%); pointer-events: none; z-index: 0; }
+        .hero::before { display: none; }
         .hero .container { position: relative; z-index: 1; }
-        .hero::after {
-          content: '';
-          position: absolute; top: -100px; right: -200px;
-          width: 700px; height: 700px;
-          background: radial-gradient(circle, rgba(199,1,2,0.25) 0%, transparent 60%);
-          pointer-events: none;
-          z-index: 0;
-        }
+        .hero::after { display: none; }
         .hero-inner { display: grid; grid-template-columns: 1.1fr 1fr; gap: 60px; align-items: center; position: relative; z-index: 1; }
-        .hero { padding: 80px 0 60px; position: relative; overflow: hidden; background: #0a0a0a; }
+        .hero { padding: 80px 0 60px; position: relative; overflow: hidden; background: #000000; }
         
         
         
@@ -274,12 +267,7 @@ export default function YouFlixLanding() {
 
         /* OFERTA */
         .oferta-wrap { padding: 100px 0; text-align: center; position: relative; overflow: hidden; }
-        .oferta-wrap::before {
-          content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-          width: 900px; height: 500px;
-          background: radial-gradient(ellipse, var(--roxo-glow) 0%, transparent 60%);
-          pointer-events: none;
-        }
+        .oferta-wrap::before { display: none; }
         .oferta-card {
           background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg-3) 100%);
           border: 1px solid rgba(199,1,2,0.3);
