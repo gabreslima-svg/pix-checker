@@ -194,7 +194,7 @@ export default function YouFlixLanding() {
           .hero {
             background-image: url('/youflix-fundo.jpg');
             background-size: cover;
-            background-position: center;
+            background-position: center 40%;
             background-repeat: no-repeat;
             position: relative;
             min-height: 100vh;
