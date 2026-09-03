@@ -12,19 +12,19 @@ export default function YouFlixLanding() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap');
         :root {
-          --bg: #0a0a0a;
-          --bg-2: #111111;
-          --bg-3: #1a1a1a;
+          --bg: #FFFFFF;
+          --bg-2: #F8F8F8;
+          --bg-3: #F0F0F0;
           --roxo: #C70102;
           --roxo-claro: #FF3B3B;
           --roxo-glow: rgba(199, 1, 2, 0.25);
           --vermelho: #C70102;
           --vermelho-claro: #E01820;
           --dourado: #F59E0B;
-          --branco: #FFFFFF;
-          --cinza-1: #A3A3A3;
+          --branco: #0a0a0a;
+          --cinza-1: #525252;
           --cinza-2: #737373;
-          --cinza-borda: #262626;
+          --cinza-borda: #E0E0E0;
           --verde: #10B981;
           --sans: 'Inter', system-ui, sans-serif;
           --serif: 'Instrument Serif', Georgia, serif;
@@ -55,7 +55,7 @@ export default function YouFlixLanding() {
           position: absolute;
           inset: 0;
           background:
-            linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.7) 60%, rgba(10,10,10,0.9) 100%),
+            linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.7) 60%, rgba(255,255,255,0.9) 100%),
             linear-gradient(90deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.15) 60%);
           pointer-events: none;
           z-index: 0;
@@ -145,7 +145,7 @@ export default function YouFlixLanding() {
         /* MOCKUP TV NO HERO */
         .mockup { position: relative; perspective: 1200px; }
         .mockup-tv {
-          background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+          background: linear-gradient(135deg, #E5E5E5 0%, #D0D0D0 100%);
           border-radius: 20px; padding: 20px 16px; box-shadow: 0 25px 60px rgba(199,1,2,0.35), 0 0 0 1px rgba(199,1,2,0.15);
           transform: rotateY(-8deg) rotateX(4deg);
           position: relative;
