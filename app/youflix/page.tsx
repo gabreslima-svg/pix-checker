@@ -198,9 +198,9 @@ export default function YouFlixLanding() {
             background-repeat: no-repeat;
             position: relative;
             min-height: 100vh;
-            padding: 100px 0 80px;
+            padding: 60px 0 80px;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
           }
           .hero::before {
             display: block !important;
