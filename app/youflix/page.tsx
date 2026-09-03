@@ -361,7 +361,7 @@ function Nav() {
           <a href="#oferta">Assinar</a>
           <a href="#faq">FAQ</a>
         </div>
-        <a href={LINK_WHATSAPP} target="_blank" rel="noopener noreferrer" className="nav-cta">Testar 12h gratis</a>
+        <a href={LINK_WHATSAPP} target="_blank" rel="noopener noreferrer" className="nav-cta">Assinar</a>
       </div>
     </nav>
   );
@@ -373,30 +373,23 @@ function Hero() {
       <div className="container">
         <div className="hero-inner">
           <div>
-            <h1>
-              Cansou de pagar <span className="strike">R$ 200/mes</span> em varios apps?
-            </h1>
-            <p className="hero-sub" style={{ marginTop: 20 }}>
-              <strong>Netflix, Prime, Globoplay, esportes, canais fechados</strong> — tudo em um so lugar por menos que uma pizza no mes.
-            </p>
+            <h1>Filmes, séries e esportes.<br /><span className="grad">Sem limites.</span></h1>
+            <p className="hero-sub">Assista onde e quando quiser. Cancele quando quiser.</p>
             <div className="preco-box">
               <div>
-                <div className="preco-tag">Plano unico</div>
                 <div className="preco-valor">R$ 29<span className="cents">,90</span></div>
-                <div className="preco-periodo">por mes</div>
+                <div className="preco-periodo">por mês · cancele quando quiser</div>
               </div>
+            </div>
             </div>
             <div className="hero-actions">
               <a href={LINK_WHATSAPP} target="_blank" rel="noopener noreferrer" className="btn-primary">
                 Testar 12h gratis
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </a>
-              <a href="#conteudo" className="btn-secondary">Ver conteudo</a>
+              <a href="#conteudo" className="btn-secondary">Explorar</a>
             </div>
-            <div className="garantia">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              <strong>12h gratis</strong> — testa antes de pagar
-            </div>
+            
           </div>
 
           <div className="mockup">
@@ -410,18 +403,18 @@ function Hero() {
 
 function Conteudo() {
   const categorias = [
-    { icone: "📺", num: "500+", titulo: "Canais ao vivo", desc: "Abertos, fechados, esportes, noticias, infantil, adulto" },
-    { icone: "🎬", num: "20 mil+", titulo: "Filmes", desc: "Lancamentos, classicos, nacionais e internacionais em HD/4K" },
-    { icone: "🎭", num: "5 mil+", titulo: "Series", desc: "Netflix, HBO, Prime, Star+, temporadas completas e dublados" },
-    { icone: "⚽", num: "24/7", titulo: "Esportes", desc: "Futebol brasileiro, europeu, UFC, NBA, Formula 1 e mais" },
+    { icone: "", num: "500+", titulo: "Canais ao vivo", desc: "Canais abertos e fechados, esportes ao vivo, notícias" },
+    { icone: "", num: "20 mil+", titulo: "Filmes", desc: "Lançamentos e clássicos em HD e 4K" },
+    { icone: "", num: "5 mil+", titulo: "Series", desc: "Temporadas completas, dublado e legendado" },
+    { icone: "", num: "24/7", titulo: "Esportes", desc: "Futebol, UFC, NBA, Fórmula 1 ao vivo" },
   ];
   return (
     <section className="conteudo" id="conteudo">
       <div className="container">
         <div className="conteudo-header">
           <div className="section-eyebrow">O que voce recebe</div>
-          <h2 className="section-titulo">Todo <em>entretenimento</em> em um so lugar.</h2>
-          <p className="section-sub">Sem precisar pagar 5 assinaturas separadas. Tudo agregado no mesmo app, com qualidade profissional.</p>
+          <h2 className="section-titulo">Tudo o que você quer assistir.</h2>
+          <p className="section-sub">Filmes, séries, ao vivo, esportes. Em qualidade HD e 4K.</p>
         </div>
         <div className="categorias">
           {categorias.map((c, i) => (
@@ -466,8 +459,8 @@ function Dispositivos() {
       <div className="container">
         <div className="dispositivos-header">
           <div className="section-eyebrow">Compatibilidade</div>
-          <h2 className="section-titulo">Assista <em>onde quiser.</em></h2>
-          <p className="section-sub">Funciona em qualquer tela. Use uma assinatura em ate 3 dispositivos simultaneamente.</p>
+          <h2 className="section-titulo">Compatível com o que você já tem.</h2>
+          <p className="section-sub">Use em até 3 dispositivos ao mesmo tempo.</p>
         </div>
         <div className="dispositivos-grid">
           {disp.map((d, i) => (
@@ -485,17 +478,17 @@ function Dispositivos() {
 
 function ComoFunciona() {
   const passos = [
-    { num: "PASSO 1", titulo: "Chame no WhatsApp", desc: "Clica no botao, cai direto no nosso atendimento. Sem cadastro no site, sem formulario." },
-    { num: "PASSO 2", titulo: "Receba o teste gratis", desc: "Enviamos as credenciais em minutos. Voce testa 12 horas sem pagar nada." },
-    { num: "PASSO 3", titulo: "Aprovou? So R$ 29,90/mes", desc: "Ativacao imediata via Pix. Assiste no mesmo instante, em qualquer dispositivo." },
+    { num: "PASSO 1", titulo: "Fale com a gente", desc: "Um clique no WhatsApp, sem cadastro." },
+    { num: "PASSO 2", titulo: "Teste gratuito", desc: "12 horas de acesso completo, sem pagar." },
+    { num: "PASSO 3", titulo: "Ative por R$ 29,90", desc: "Pagamento via Pix. Ativação imediata." },
   ];
   return (
     <section className="como-funciona-wrap">
       <div className="container">
         <div className="cf-header">
           <div className="section-eyebrow">Como funciona</div>
-          <h2 className="section-titulo">Assista em <em>3 passos.</em></h2>
-          <p className="section-sub">Do primeiro contato ao filme rodando na sua TV em menos de 15 minutos.</p>
+          <h2 className="section-titulo">Comece em 3 passos.</h2>
+          <p className="section-sub">Do primeiro contato ao primeiro filme, em minutos.</p>
         </div>
         <div className="passos">
           {passos.map((p, i) => (
@@ -516,9 +509,9 @@ function Oferta() {
     <section className="oferta-wrap" id="oferta">
       <div className="container">
         <div className="oferta-card">
-          <div className="oferta-tag">🔥 OFERTA LIMITADA</div>
-          <h2>Assine agora e ganhe <em style={{ fontFamily: 'var(--serif)', fontStyle: 'italic', fontWeight: 400, background: 'linear-gradient(135deg, var(--vermelho), var(--roxo))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>12h gratis</em> pra testar.</h2>
-          <p>Sem cartao, sem cadastro complicado. So chama no WhatsApp e voce recebe as credenciais em minutos.</p>
+          <div className="oferta-tag">Comece hoje</div>
+          <h2>Assine em <em style={{ fontFamily: "var(--serif)", fontStyle: "italic", fontWeight: 400, background: "linear-gradient(135deg, var(--vermelho), var(--roxo))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>menos de 5 minutos.</em></h2>
+          <p>Sem cartão. Sem cadastro.</p>
           <div className="oferta-preco">
             <span className="oferta-preco-simbolo">R$</span>
             <span className="oferta-preco-valor">29</span>
@@ -526,16 +519,10 @@ function Oferta() {
           </div>
           <div className="oferta-periodo">por mes · pagamento via Pix</div>
           <a href={LINK_WHATSAPP} target="_blank" rel="noopener noreferrer" className="btn-primary oferta-cta">
-            Testar 12h gratis no WhatsApp
+            Começar no WhatsApp
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </a>
-          <div className="oferta-garantia">
-            <span>✓ Sem cartao</span>
-            <span>·</span>
-            <span>✓ Sem fidelidade</span>
-            <span>·</span>
-            <span>✓ <strong>12h gratis</strong> pra testar</span>
-          </div>
+          <div className="oferta-garantia"><span>Cancele quando quiser · Suporte humano · Teste 12h grátis</span></div>
         </div>
       </div>
     </section>
@@ -545,9 +532,9 @@ function Oferta() {
 function Faq() {
   const [aberto, setAberto] = useState<number | null>(0);
   const perguntas = [
-    { q: "Como funciona o teste gratuito de 12h?", a: "Chama no WhatsApp, a gente envia as credenciais em minutos. Voce assiste tudo sem pagar nada por 12 horas. Se gostou, ai sim ativa o plano mensal via Pix." },
-    { q: "Preciso pagar antes de testar?", a: "Nao. O teste e realmente gratis, sem cartao e sem cadastro. So chamar no WhatsApp e receber o acesso." },
-    { q: "Quantos dispositivos posso usar ao mesmo tempo?", a: "Ate 3 dispositivos simultaneos na mesma assinatura. Voce pode assistir na TV enquanto sua familia assiste no celular e no tablet." },
+    { q: "Como funciona o teste gratuito de 12h?", a: "Chame no WhatsApp e envie 'quero testar'. Você recebe as credenciais em minutos e assiste 12 horas sem pagar." },
+    { q: "Preciso pagar antes de testar?", a: "Não. O teste é gratuito, sem cartão." },
+    { q: "Quantos dispositivos posso usar ao mesmo tempo?", a: "Até 3 dispositivos ao mesmo tempo na mesma assinatura." },
     { q: "O YouFlix funciona em Smart TV?", a: "Sim. Funciona em qualquer Smart TV recente (Samsung, LG, Sony, TCL, Roku), TV Box (Android TV, Fire Stick, Mi Box), celular, tablet e PC." },
     { q: "E se eu tiver problema?", a: "Suporte via WhatsApp em horario comercial. Nossa equipe ajuda desde a instalacao ate qualquer problema tecnico. Sem robo, resposta humana." },
     { q: "Tem fidelidade?", a: "Nao. Voce paga mes a mes, sem contrato ou multa. Se em algum momento quiser cancelar, e so parar de pagar." },
