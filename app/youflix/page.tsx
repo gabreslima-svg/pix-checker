@@ -190,7 +190,30 @@ export default function YouFlixLanding() {
         }
         @media (max-width: 900px) {
           .hero-inner { grid-template-columns: 1fr; }
-          .mockup { max-width: 480px; margin: 20px auto 0; }
+          .mockup { display: none; }
+          .hero {
+            background-image: url('/youflix-fundo.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+          }
+          .hero::before {
+            display: block !important;
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,0.95) 100%);
+            pointer-events: none;
+            z-index: 0;
+          }
+          .hero .container {
+            position: relative;
+            z-index: 1;
+          }
+          .hero h1, .hero-sub, .hero-badge {
+            text-shadow: 0 2px 20px rgba(0,0,0,0.9);
+          }
         }
 
         /* SECOES */
