@@ -207,7 +207,7 @@ export default function YouFlixLanding() {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.65) 60%, rgba(0,0,0,0.9) 100%);
+            background: linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.3) 55%, rgba(0,0,0,0.6) 80%, rgba(0,0,0,0.9) 100%);
             pointer-events: none;
             z-index: 0;
           }
