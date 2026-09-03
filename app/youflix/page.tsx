@@ -184,33 +184,48 @@ export default function YouFlixLanding() {
           transform: rotateY(-4deg) rotateX(2deg) scale(1.02);
         }
         
-        .preco-linha {
+        
+        
+        
+        
+        
+        
+        .preco-card {
           display: inline-flex;
           align-items: baseline;
-          gap: 4px;
+          gap: 8px;
+          padding: 14px 22px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 12px;
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
           margin-bottom: 24px;
-          color: var(--branco);
-          font-weight: 700;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
-        .preco-linha .preco-valor {
+        .preco-label {
+          font-size: 12px;
+          color: var(--cinza-1);
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          margin-right: 4px;
+        }
+        .preco-valor {
           font-size: 32px;
+          font-weight: 800;
+          color: var(--branco);
           letter-spacing: -0.02em;
           line-height: 1;
         }
-        .preco-linha .cents {
+        .preco-valor .cents {
           font-size: 18px;
           color: var(--cinza-1);
           font-weight: 600;
           margin-left: -2px;
         }
-        .preco-linha .preco-sep {
-          color: var(--cinza-2);
-          font-weight: 400;
-          margin: 0 4px;
-          font-size: 22px;
-        }
-        .preco-linha .preco-mes {
-          font-size: 15px;
+        .preco-mes {
+          font-size: 14px;
           color: var(--cinza-1);
           font-weight: 500;
         }
@@ -417,10 +432,10 @@ function Hero() {
           <div>
             <h1>Filmes, séries e esportes.<br /><span className="grad">Sem limites.</span></h1>
             <p className="hero-sub">Assista onde e quando quiser. Cancele quando quiser.</p>
-            <div className="preco-linha">
+            <div className="preco-card">
+              <span className="preco-label">A partir de</span>
               <span className="preco-valor">R$ 29<span className="cents">,90</span></span>
-              <span className="preco-sep">/</span>
-              <span className="preco-mes">mês</span>
+              <span className="preco-mes">/mês</span>
             </div>
             <div className="hero-actions">
               <a href={LINK_WHATSAPP} target="_blank" rel="noopener noreferrer" className="btn-primary">
