@@ -88,16 +88,11 @@ export default function YouFlixLanding() {
           text-shadow: 0 2px 12px rgba(0,0,0,0.7);
         }
         .hero-sub strong { color: var(--branco); }
-        .preco-box {
-          display: inline-flex; align-items: center; gap: 16px;
-          padding: 16px 24px; background: var(--bg-2);
-          border: 1px solid var(--cinza-borda); border-radius: 12px;
-          margin-bottom: 24px;
-        }
-        .preco-tag { font-size: 11px; color: var(--cinza-1); text-transform: uppercase; letter-spacing: 0.1em; }
-        .preco-valor { font-size: 36px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
-        .preco-valor .cents { font-size: 20px; color: var(--cinza-1); }
-        .preco-periodo { font-size: 13px; color: var(--cinza-1); margin-top: 2px; }
+        
+        
+        
+        
+        
 
         .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px; }
         .btn-primary {
@@ -187,6 +182,37 @@ export default function YouFlixLanding() {
         }
         .mockup-img:hover {
           transform: rotateY(-4deg) rotateX(2deg) scale(1.02);
+        }
+        
+        .preco-linha {
+          display: inline-flex;
+          align-items: baseline;
+          gap: 4px;
+          margin-bottom: 24px;
+          color: var(--branco);
+          font-weight: 700;
+        }
+        .preco-linha .preco-valor {
+          font-size: 32px;
+          letter-spacing: -0.02em;
+          line-height: 1;
+        }
+        .preco-linha .cents {
+          font-size: 18px;
+          color: var(--cinza-1);
+          font-weight: 600;
+          margin-left: -2px;
+        }
+        .preco-linha .preco-sep {
+          color: var(--cinza-2);
+          font-weight: 400;
+          margin: 0 4px;
+          font-size: 22px;
+        }
+        .preco-linha .preco-mes {
+          font-size: 15px;
+          color: var(--cinza-1);
+          font-weight: 500;
         }
         @media (max-width: 900px) {
           .hero-inner { grid-template-columns: 1fr; }
@@ -391,11 +417,10 @@ function Hero() {
           <div>
             <h1>Filmes, séries e esportes.<br /><span className="grad">Sem limites.</span></h1>
             <p className="hero-sub">Assista onde e quando quiser. Cancele quando quiser.</p>
-            <div className="preco-box">
-              <div>
-                <div className="preco-valor">R$ 29<span className="cents">,90</span></div>
-                <div className="preco-periodo">por mês · cancele quando quiser</div>
-              </div>
+            <div className="preco-linha">
+              <span className="preco-valor">R$ 29<span className="cents">,90</span></span>
+              <span className="preco-sep">/</span>
+              <span className="preco-mes">mês</span>
             </div>
             <div className="hero-actions">
               <a href={LINK_WHATSAPP} target="_blank" rel="noopener noreferrer" className="btn-primary">
