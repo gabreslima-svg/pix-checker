@@ -163,11 +163,11 @@ export default function FinanceiroGabrielPage() {
         .cel-input:focus { background: #fff; box-shadow: inset 0 0 0 2px #1a73e8; }
         .cel-input::placeholder { color: #bdc1c6; font-weight: 400; }
 
-        .cel-status { position: absolute; top: 2px; right: 4px; width: 8px; height: 8px; border-radius: 50%; cursor: pointer; opacity: 0.8; }
-        .cel-status.pago { background: #188038; }
-        .cel-status.pendente { background: #d93025; }
-        .cel-status.vazio { background: #dadce0; }
-        .cel-status:hover { transform: scale(1.4); opacity: 1; }
+        
+        
+        
+        
+        
 
         .btn-lixo { background: transparent; border: none; color: #5f6368; cursor: pointer; padding: 6px; font-size: 14px; line-height: 1; opacity: 0.5; transition: opacity 0.15s; }
         tr:hover .btn-lixo { opacity: 1; }
@@ -183,6 +183,35 @@ export default function FinanceiroGabrielPage() {
         input[type="file"] { display: none; }
         .file-label { background: #fff; color: #1a73e8; border: 1px solid #dadce0; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; cursor: pointer; display: inline-block; }
         .file-label:hover { background: #f1f3f4; }
+
+        
+        .cel-check {
+          position: absolute;
+          top: 50%;
+          right: 4px;
+          transform: translateY(-50%);
+          width: 16px;
+          height: 16px;
+          border: none;
+          background: transparent;
+          color: #bdc1c6;
+          font-size: 11px;
+          cursor: pointer;
+          border-radius: 3px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          line-height: 1;
+          padding: 0;
+          opacity: 0;
+          transition: opacity 0.15s;
+        }
+        td.celula:hover .cel-check { opacity: 1; }
+        td.celula.st-pago .cel-check { opacity: 1; color: #188038; }
+        td.celula.st-pendente .cel-check { opacity: 1; color: #d93025; }
+        .cel-check:hover { background: rgba(0,0,0,0.05); color: #202124; }
+        .cel-input { padding-right: 24px; }
 
         @media (max-width: 768px) {
           .campo { min-width: 140px; }
@@ -258,11 +287,7 @@ export default function FinanceiroGabrielPage() {
                           value={dados.valor > 0 ? dados.valor.toString().replace(".", ",") : ""}
                           onChange={(e) => atualizar(d.id, mesIdx, "valor", parseValor(e.target.value))}
                         />
-                        <span
-                          className={`cel-status ${dados.status}`}
-                          onClick={() => toggleStatus(d.id, mesIdx)}
-                          title="Clique: vazio → pendente → pago"
-                        />
+                        
                       </td>
                     );
                   })}
