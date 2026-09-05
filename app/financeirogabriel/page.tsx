@@ -271,8 +271,8 @@ export default function FinanceiroGabrielPage() {
     <>
       <style>{`
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #fff; color: #202124; font-family: 'Google Sans', Roboto, Arial, sans-serif; -webkit-font-smoothing: antialiased; font-size: 13px; }
-        .barra { border-bottom: 1px solid #e0e0e0; padding: 10px 20px; display: flex; align-items: center; gap: 16px; background: #fff; position: sticky; top: 0; z-index: 10; }
+        html, body { overflow-x: hidden; max-width: 100vw; } body { background: #fff; color: #202124; font-family: 'Google Sans', Roboto, Arial, sans-serif; -webkit-font-smoothing: antialiased; font-size: 13px; }
+        .barra { border-bottom: 1px solid #e0e0e0; padding: 10px 20px; display: flex; align-items: center; gap: 16px; background: #fff; position: sticky; top: 0; z-index: 10; max-width: 100vw; overflow: hidden; }
         .titulo { font-size: 15px; font-weight: 500; color: #202124; }
         .barra-info { color: #5f6368; font-size: 12px; }
         .barra-status { margin-left: auto; font-size: 12px; color: #5f6368; display: flex; align-items: center; gap: 8px; }
@@ -280,7 +280,7 @@ export default function FinanceiroGabrielPage() {
         .salvo { color: #188038; }
         .erro-msg { color: #d93025; }
 
-        .toolbar { background: #f8f9fa; border-bottom: 1px solid #e0e0e0; padding: 6px 20px; display: flex; gap: 8px; align-items: center; font-size: 12px; }
+        .toolbar { background: #f8f9fa; border-bottom: 1px solid #e0e0e0; padding: 6px 20px; display: flex; gap: 8px; align-items: center; font-size: 12px; max-width: 100vw; overflow: hidden; flex-wrap: wrap; }
         select, .campo { background: #fff; border: 1px solid #dadce0; border-radius: 4px; padding: 5px 8px; font-size: 12px; color: #202124; font-family: inherit; outline: none; }
         select:focus, .campo:focus { border-color: #1a73e8; }
         .campo { min-width: 200px; }
@@ -382,7 +382,10 @@ export default function FinanceiroGabrielPage() {
 
         @media (max-width: 900px) {
           .desktop-view { display: none; }
-          .mobile-view { display: block; padding: 12px; background: #f8f9fa; min-height: calc(100vh - 100px); }
+          .mobile-view { display: block; padding: 12px; background: #f8f9fa; min-height: calc(100vh - 100px); max-width: 100vw; overflow-x: hidden; }
+          .toolbar { display: none !important; }
+          .barra { padding: 10px 12px; }
+          .barra .titulo { font-size: 14px; }
 
           /* Seletor de mes no topo */
           .mes-seletor { display: flex; gap: 6px; overflow-x: auto; padding: 8px 4px 12px; margin-bottom: 8px; -webkit-overflow-scrolling: touch; }
