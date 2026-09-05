@@ -65,10 +65,13 @@ export default function YouFlixLanding() {
           padding: 80px 0 60px;
           position: relative;
           overflow: hidden;
+          min-height: 620px;
+          display: flex;
+          align-items: center;
           background-color: #000000;
           background-image: url('/youflix-heropc.jpg');
           background-size: cover;
-          background-position: center;
+          background-position: center top;
           background-repeat: no-repeat;
         }
         
