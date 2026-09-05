@@ -191,13 +191,13 @@ export default function FinanceiroGabrielPage() {
         .cor-pendente { color: #d93025; }
 
         .planilha { overflow-x: auto; background: #fff; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th, td { border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; padding: 0; text-align: center; vertical-align: middle; height: 36px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+        th, td { border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; padding: 0; text-align: center; vertical-align: middle; height: 30px; }
         th { background: #f8f9fa; color: #5f6368; font-weight: 500; font-size: 11px; padding: 6px 8px; position: sticky; top: 0; z-index: 2; }
         th.col-idx { background: #f1f3f4; width: 32px; }
-        th.col-nome { text-align: left; padding-left: 12px; min-width: 140px; }
-        th.col-mes { min-width: 90px; }
-        th.col-total { background: #e8f0fe; color: #1a73e8; font-weight: 600; min-width: 95px; }
+        th.col-nome { text-align: left; padding-left: 10px; min-width: 110px; width: 110px; }
+        th.col-mes { min-width: 65px; width: 65px; }
+        th.col-total { background: #e8f0fe; color: #1a73e8; font-weight: 600; min-width: 80px; width: 80px; }
         th.col-acao { width: 36px; background: #f1f3f4; }
 
         td { position: relative; }
@@ -210,7 +210,7 @@ export default function FinanceiroGabrielPage() {
         td.celula.st-pendente { background: rgba(217,48,37,0.08); }
         td.celula.st-pago:hover { background: rgba(24,128,56,0.15); }
         td.celula.st-pendente:hover { background: rgba(217,48,37,0.15); }
-        td.total { background: #f1f3f4; font-weight: 600; color: #1a73e8; padding: 6px 10px; text-align: right; }
+        td.total { background: #f1f3f4; font-weight: 600; color: #1a73e8; padding: 4px 8px; text-align: right; font-size: 11px; }
         td.acao { background: #f8f9fa; padding: 0; }
 
         .nome-wrap { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -228,10 +228,10 @@ export default function FinanceiroGabrielPage() {
           outline: none; background: #fff;
         }
 
-        .cel-wrap { display: flex; align-items: center; padding: 0 2px 0 6px; height: 36px; }
+        .cel-wrap { display: flex; align-items: center; padding: 0 2px 0 4px; height: 32px; }
         .cel-input {
           flex: 1; border: none; background: transparent;
-          text-align: right; padding: 0 2px 0 0; font-size: 11px;
+          text-align: right; padding: 0 2px 0 0; font-size: 10px;
           color: #202124; font-family: inherit; outline: none;
           min-width: 0;
         }
@@ -240,9 +240,9 @@ export default function FinanceiroGabrielPage() {
 
         .cel-seta {
           background: transparent; border: none; cursor: pointer;
-          width: 16px; height: 16px; border-radius: 3px;
+          width: 14px; height: 14px; border-radius: 3px;
           display: flex; align-items: center; justify-content: center;
-          color: #bdc1c6; font-size: 10px; font-weight: 700;
+          color: #bdc1c6; font-size: 9px; font-weight: 700;
           padding: 0; flex-shrink: 0; margin-left: 2px;
           transition: all 0.15s;
         }
