@@ -528,6 +528,49 @@ function Hero() {
               </a>
               <a href="#conteudo" className="btn-secondary">Explorar</a>
             </div>
+
+            <div className="hero-dispositivos">
+              <div className="hero-disp-titulo">Assista em qualquer tela</div>
+              <div className="hero-disp-lista">
+                <div className="hero-disp-item">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="4" width="20" height="14" rx="2"/>
+                    <path d="M8 21h8M12 18v3"/>
+                  </svg>
+                  <span>Smart TV</span>
+                </div>
+                <div className="hero-disp-item">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="8" width="18" height="10" rx="2"/>
+                    <circle cx="8" cy="13" r="1" fill="currentColor"/>
+                    <path d="M12 13h5"/>
+                  </svg>
+                  <span>TV Box</span>
+                </div>
+                <div className="hero-disp-item">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="6" y="2" width="12" height="20" rx="2"/>
+                    <path d="M11 18h2"/>
+                  </svg>
+                  <span>Celular</span>
+                </div>
+                <div className="hero-disp-item">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="4" y="3" width="16" height="18" rx="2"/>
+                    <path d="M11 18h2"/>
+                  </svg>
+                  <span>Tablet</span>
+                </div>
+                <div className="hero-disp-item">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="4" width="20" height="12" rx="2"/>
+                    <path d="M2 20h20"/>
+                  </svg>
+                  <span>PC</span>
+                </div>
+              </div>
+              <div className="hero-disp-marcas">Samsung · LG · Roku · TCL · Fire Stick · Android · iOS · Windows · Mac</div>
+            </div>
             
           </div>
 
