@@ -306,7 +306,7 @@ export default function YouFlixLanding() {
           opacity: 0.7;
         }
         @media (max-width: 600px) {
-          .hero-dispositivos { padding: 10px 12px; }
+          .hero-dispositivos { padding: 10px 12px; margin-top: 100px; }
           .hero-disp-lista { gap: 18px; margin-bottom: 4px; }
           .hero-disp-item span { font-size: 10px; }
           .hero-disp-marcas { font-size: 9px; }
