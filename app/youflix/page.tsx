@@ -482,7 +482,6 @@ export default function YouFlixLanding() {
       <Hero />
       <Conteudo />
       <ComoFunciona />
-      <Oferta />
       <Faq />
       <Footer />
     </>
@@ -499,7 +498,6 @@ function Nav() {
         </a>
         <div className="nav-links">
           <a href="#conteudo">Conteudo</a>
-          <a href="#oferta">Assinar</a>
           <a href="#faq">FAQ</a>
         </div>
         <a href={LINK_WHATSAPP} target="_blank" rel="noopener noreferrer" className="nav-cta">Assinar</a>
@@ -683,37 +681,12 @@ function ComoFunciona() {
   );
 }
 
-function Oferta() {
-  return (
-    <section className="oferta-wrap" id="oferta">
-      <div className="container">
-        <div className="oferta-card">
-          <div className="oferta-tag">Comece hoje</div>
-          <h2>Assine em <em style={{ fontFamily: "var(--serif)", fontStyle: "italic", fontWeight: 400, background: "linear-gradient(135deg, var(--vermelho), var(--roxo))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>menos de 5 minutos.</em></h2>
-          <p>Sem cartão. Sem cadastro.</p>
-          <div className="oferta-preco">
-            <span className="oferta-preco-simbolo">R$</span>
-            <span className="oferta-preco-valor">29</span>
-            <span className="oferta-preco-cents">,90</span>
-          </div>
-          <div className="oferta-periodo">por mes · pagamento via Pix</div>
-          <a href={LINK_WHATSAPP} target="_blank" rel="noopener noreferrer" className="btn-primary oferta-cta">
-            Começar no WhatsApp
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </a>
-          <div className="oferta-garantia"><span>Cancele quando quiser · Suporte humano · Teste 12h grátis</span></div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function Faq() {
   const [aberto, setAberto] = useState<number | null>(0);
   const perguntas = [
     { q: "Como funciona o teste gratuito de 12h?", a: "Chame no WhatsApp e envie 'quero testar'. Você recebe as credenciais em minutos e assiste 12 horas sem pagar." },
     { q: "Preciso pagar antes de testar?", a: "Não. O teste é gratuito, sem cartão." },
-    { q: "Quantos dispositivos posso usar ao mesmo tempo?", a: "Até 3 dispositivos ao mesmo tempo na mesma assinatura." },
+    { q: "Quantos dispositivos posso usar ao mesmo tempo?", a: "É apenas um dispositivo com acesso completo. Temos planos econômicos para mais de um aplicativo — consulte no WhatsApp." },
     { q: "O YouFlix funciona em Smart TV?", a: "Sim. Funciona em qualquer Smart TV recente (Samsung, LG, Sony, TCL, Roku), TV Box (Android TV, Fire Stick, Mi Box), celular, tablet e PC." },
     { q: "E se eu tiver problema?", a: "Suporte via WhatsApp em horario comercial. Nossa equipe ajuda desde a instalacao ate qualquer problema tecnico. Sem robo, resposta humana." },
     { q: "Tem fidelidade?", a: "Nao. Voce paga mes a mes, sem contrato ou multa. Se em algum momento quiser cancelar, e so parar de pagar." },
