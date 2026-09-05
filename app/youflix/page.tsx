@@ -62,7 +62,7 @@ export default function YouFlixLanding() {
         .hero::after { display: none; }
         .hero-inner { display: block; max-width: 720px; margin: 0 auto; position: relative; z-index: 1; text-align: center; }
         .hero {
-          padding: 80px 0 60px;
+          padding: 80px 0 120px;
           position: relative;
           overflow: hidden;
           min-height: 620px;
@@ -252,38 +252,40 @@ export default function YouFlixLanding() {
 
         /* ============ FAIXA DE DISPOSITIVOS NO HERO ============ */
         .hero-dispositivos {
-          margin-top: 40px;
-          padding: 24px 20px;
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 14px;
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          margin: 0;
+          padding: 14px 20px;
+          background: rgba(0,0,0,0.35);
+          border-top: 1px solid rgba(255,255,255,0.08);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          z-index: 2;
         }
         .hero-disp-titulo {
-          font-size: 11px;
-          color: var(--cinza-1);
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          font-weight: 500;
-          margin-bottom: 16px;
-          text-align: center;
+          display: none;
         }
         .hero-disp-lista {
           display: flex;
-          gap: 32px;
+          gap: 28px;
           justify-content: center;
-          flex-wrap: wrap;
+          flex-wrap: nowrap;
           align-items: center;
-          margin-bottom: 12px;
+          margin-bottom: 8px;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
         }
+        .hero-disp-lista::-webkit-scrollbar { display: none; }
         .hero-disp-item {
           display: flex;
-          flex-direction: column;
+          flex-direction: row;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
           color: var(--branco);
-          transition: transform 0.15s;
+          flex-shrink: 0;
         }
         .hero-disp-item:hover {
           transform: translateY(-2px);
@@ -298,18 +300,21 @@ export default function YouFlixLanding() {
           letter-spacing: 0.02em;
         }
         .hero-disp-marcas {
-          font-size: 11px;
+          font-size: 10px;
           color: var(--cinza-2);
           text-align: center;
           font-weight: 400;
           letter-spacing: 0.02em;
-          border-top: 1px solid rgba(255,255,255,0.05);
-          padding-top: 12px;
+          border-top: none;
+          padding-top: 0;
+          margin-top: 4px;
+          opacity: 0.7;
         }
         @media (max-width: 600px) {
-          .hero-dispositivos { margin-top: 32px; padding: 20px 16px; }
-          .hero-disp-lista { gap: 20px; }
-          .hero-disp-marcas { font-size: 10px; }
+          .hero-dispositivos { padding: 10px 12px; }
+          .hero-disp-lista { gap: 18px; margin-bottom: 4px; }
+          .hero-disp-item span { font-size: 10px; }
+          .hero-disp-marcas { font-size: 9px; }
         }
 
         @media (max-width: 900px) {
@@ -533,14 +538,14 @@ function Hero() {
               <div className="hero-disp-titulo">Assista em qualquer tela</div>
               <div className="hero-disp-lista">
                 <div className="hero-disp-item">
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="4" width="20" height="14" rx="2"/>
                     <path d="M8 21h8M12 18v3"/>
                   </svg>
                   <span>Smart TV</span>
                 </div>
                 <div className="hero-disp-item">
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="8" width="18" height="10" rx="2"/>
                     <circle cx="8" cy="13" r="1" fill="currentColor"/>
                     <path d="M12 13h5"/>
@@ -548,21 +553,21 @@ function Hero() {
                   <span>TV Box</span>
                 </div>
                 <div className="hero-disp-item">
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="6" y="2" width="12" height="20" rx="2"/>
                     <path d="M11 18h2"/>
                   </svg>
                   <span>Celular</span>
                 </div>
                 <div className="hero-disp-item">
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="4" y="3" width="16" height="18" rx="2"/>
                     <path d="M11 18h2"/>
                   </svg>
                   <span>Tablet</span>
                 </div>
                 <div className="hero-disp-item">
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="4" width="20" height="12" rx="2"/>
                     <path d="M2 20h20"/>
                   </svg>
