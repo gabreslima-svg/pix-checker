@@ -58,7 +58,7 @@ export default function YouFlixLanding() {
           pointer-events: none;
           z-index: 0;
         }
-        .hero .container { position: relative; z-index: 1; }
+        .hero .container { position: relative; z-index: 5; }
         .hero::after { display: none; }
         .hero-inner { display: block; max-width: 720px; margin: 0 auto; position: relative; z-index: 1; text-align: center; }
         .hero {
@@ -262,7 +262,7 @@ export default function YouFlixLanding() {
           border-top: 1px solid rgba(255,255,255,0.08);
           backdrop-filter: blur(8px);
           -webkit-backdrop-filter: blur(8px);
-          z-index: 2;
+          z-index: 1;
         }
         .hero-disp-titulo {
           display: none;
