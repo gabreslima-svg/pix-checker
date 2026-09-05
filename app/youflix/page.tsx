@@ -474,10 +474,55 @@ function Hero() {
 
 function Conteudo() {
   const categorias = [
-    { icone: "", num: "500+", titulo: "Canais ao vivo", desc: "Canais abertos e fechados, esportes ao vivo, notícias" },
-    { icone: "", num: "20 mil+", titulo: "Filmes", desc: "Lançamentos e clássicos em HD e 4K" },
-    { icone: "", num: "5 mil+", titulo: "Series", desc: "Temporadas completas, dublado e legendado" },
-    { icone: "", num: "24/7", titulo: "Esportes", desc: "Futebol, UFC, NBA, Fórmula 1 ao vivo" },
+    {
+      icone: (
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="4" width="20" height="15" rx="2"/>
+          <path d="M8 22h8M12 19v3"/>
+          <path d="M7 8h10M7 12h10M7 16h6"/>
+        </svg>
+      ),
+      num: "500+",
+      titulo: "Canais ao vivo",
+      desc: "Canais abertos e fechados, esportes ao vivo, notícias"
+    },
+    {
+      icone: (
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="M2 8h20M6 4v4M10 4v4M14 4v4M18 4v4"/>
+          <path d="M2 16h20M6 20v-4M10 20v-4M14 20v-4M18 20v-4"/>
+        </svg>
+      ),
+      num: "30 mil+",
+      titulo: "Filmes",
+      desc: "Lançamentos e clássicos em HD e 4K"
+    },
+    {
+      icone: (
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <path d="M3 9h18M9 3v18"/>
+          <circle cx="15" cy="15" r="1.5" fill="currentColor"/>
+        </svg>
+      ),
+      num: "10 mil+",
+      titulo: "Séries",
+      desc: "Temporadas completas, dublado e legendado"
+    },
+    {
+      icone: (
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 2a15 15 0 0 1 0 20"/>
+          <path d="M12 2a15 15 0 0 0 0 20"/>
+          <path d="M2 12h20"/>
+        </svg>
+      ),
+      num: "24/7",
+      titulo: "Esportes",
+      desc: "Futebol, UFC, NBA, Fórmula 1 ao vivo"
+    },
   ];
   return (
     <section className="conteudo" id="conteudo">
@@ -490,7 +535,7 @@ function Conteudo() {
         <div className="categorias">
           {categorias.map((c, i) => (
             <div className="categoria" key={i}>
-              <div className="categoria-icone" style={{ fontSize: 28 }}>{c.icone}</div>
+              <div className="categoria-icone">{c.icone}</div>
               <div className="categoria-num">{c.num}</div>
               <h3>{c.titulo}</h3>
               <p>{c.desc}</p>
