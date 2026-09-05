@@ -62,10 +62,10 @@ export default function YouFlixLanding() {
         .hero::after { display: none; }
         .hero-inner { display: block; max-width: 720px; margin: 0 auto; position: relative; z-index: 1; text-align: center; }
         .hero {
-          padding: 80px 0 120px;
+          padding: 80px 0 200px;
           position: relative;
           overflow: hidden;
-          min-height: 620px;
+          min-height: 720px;
           display: flex;
           align-items: center;
           background-color: #000000;
