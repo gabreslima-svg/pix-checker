@@ -195,9 +195,9 @@ export default function FinanceiroGabrielPage() {
         th, td { border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; padding: 0; text-align: center; vertical-align: middle; height: 36px; }
         th { background: #f8f9fa; color: #5f6368; font-weight: 500; font-size: 11px; padding: 6px 8px; position: sticky; top: 0; z-index: 2; }
         th.col-idx { background: #f1f3f4; width: 32px; }
-        th.col-nome { text-align: left; padding-left: 12px; min-width: 180px; }
-        th.col-mes { min-width: 130px; }
-        th.col-total { background: #e8f0fe; color: #1a73e8; font-weight: 600; min-width: 110px; }
+        th.col-nome { text-align: left; padding-left: 12px; min-width: 140px; }
+        th.col-mes { min-width: 90px; }
+        th.col-total { background: #e8f0fe; color: #1a73e8; font-weight: 600; min-width: 95px; }
         th.col-acao { width: 36px; background: #f1f3f4; }
 
         td { position: relative; }
@@ -228,10 +228,10 @@ export default function FinanceiroGabrielPage() {
           outline: none; background: #fff;
         }
 
-        .cel-wrap { display: flex; align-items: center; padding: 0 4px 0 8px; height: 36px; }
+        .cel-wrap { display: flex; align-items: center; padding: 0 2px 0 6px; height: 36px; }
         .cel-input {
           flex: 1; border: none; background: transparent;
-          text-align: right; padding: 0 4px 0 0; font-size: 12px;
+          text-align: right; padding: 0 2px 0 0; font-size: 11px;
           color: #202124; font-family: inherit; outline: none;
           min-width: 0;
         }
@@ -240,7 +240,7 @@ export default function FinanceiroGabrielPage() {
 
         .cel-seta {
           background: transparent; border: none; cursor: pointer;
-          width: 20px; height: 20px; border-radius: 3px;
+          width: 16px; height: 16px; border-radius: 3px;
           display: flex; align-items: center; justify-content: center;
           color: #bdc1c6; font-size: 10px; font-weight: 700;
           padding: 0; flex-shrink: 0; margin-left: 2px;
