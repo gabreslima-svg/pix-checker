@@ -20,7 +20,7 @@ export async function GET() {
     const client = await getClient();
     const dados = await client.get(CHAVE);
     await client.quit();
-    return NextResponse.json({ ok: true, despesas: dados ? JSON.parse(dados) : [] });
+    return NextResponse.json({ ok: true, despesas: dados ? JSON.parse(dados as string) : [] });
   } catch (e: any) {
     return NextResponse.json({ ok: false, erro: e.message || "Erro ao ler" }, { status: 500 });
   }
