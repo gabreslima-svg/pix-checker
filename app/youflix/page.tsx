@@ -50,11 +50,27 @@ export default function YouFlixLanding() {
         @media (max-width: 768px) { .nav-links { display: none; } }
 
         /* HERO */
-        .hero::before { display: none; }
+        .hero::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.8) 100%);
+          pointer-events: none;
+          z-index: 0;
+        }
         .hero .container { position: relative; z-index: 1; }
         .hero::after { display: none; }
         .hero-inner { display: grid; grid-template-columns: 1.1fr 1fr; gap: 60px; align-items: center; position: relative; z-index: 1; }
-        .hero { padding: 80px 0 60px; position: relative; overflow: hidden; background: #000000; }
+        .hero {
+          padding: 80px 0 60px;
+          position: relative;
+          overflow: hidden;
+          background-color: #000000;
+          background-image: url('/youflix-heropc.jpg');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+        }
         
         
         
