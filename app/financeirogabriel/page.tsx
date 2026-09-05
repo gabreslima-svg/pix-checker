@@ -7,6 +7,7 @@ type Despesa = {
   id: string;
   ano: number;
   nome: string;
+  vencimento: number; // dia do mes (1-31)
   valores: Record<number, { valor: number; status: Status }>;
 };
 
@@ -36,6 +37,7 @@ export default function FinanceiroGabrielPage() {
   const [despesas, setDespesas] = useState<Despesa[]>([]);
   const [ano, setAno] = useState<number>(new Date().getFullYear());
   const [novoNome, setNovoNome] = useState("");
+  const [novoVencimento, setNovoVencimento] = useState<number>(10);
   const [salvando, setSalvando] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [ultimoSalvo, setUltimoSalvo] = useState<string>("");
@@ -100,11 +102,20 @@ export default function FinanceiroGabrielPage() {
   function adicionar() {
     const nome = novoNome.trim();
     if (!nome) return;
+    // Cria com todos os 12 meses ja como "pendente"
+    const valores: Record<number, { valor: number; status: Status }> = {};
+    for (let m = 0; m < 12; m++) {
+      valores[m] = { valor: 0, status: "pendente" as Status };
+    }
     setDespesas([
       ...despesas,
-      { id: Math.random().toString(36).slice(2), ano, nome, valores: {} },
+      { id: Math.random().toString(36).slice(2), ano, nome, vencimento: novoVencimento, valores },
     ]);
     setNovoNome("");
+  }
+
+  function atualizarVencimento(id: string, dia: number) {
+    setDespesas(despesas.map((d) => (d.id === id ? { ...d, vencimento: dia } : d)));
   }
 
   function remover(id: string) {
@@ -188,7 +199,7 @@ export default function FinanceiroGabrielPage() {
         .contador { color: #5f6368; font-size: 11px; margin-left: auto; display: flex; gap: 16px; }
         .contador b { color: #202124; font-weight: 500; }
         .cor-pago { color: #188038; }
-        .cor-pendente { color: #d93025; }
+        .cor-pendente { color: #F9AB00; }
 
         .planilha { overflow-x: auto; background: #fff; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
@@ -196,6 +207,7 @@ export default function FinanceiroGabrielPage() {
         th { background: #f8f9fa; color: #5f6368; font-weight: 500; font-size: 11px; padding: 6px 8px; position: sticky; top: 0; z-index: 2; }
         th.col-idx { background: #f1f3f4; width: 32px; }
         th.col-nome { text-align: left; padding-left: 10px; min-width: 110px; width: 110px; }
+        th.col-vencimento { min-width: 55px; width: 55px; background: #f8f9fa; color: #5f6368; }
         th.col-mes { min-width: 65px; width: 65px; }
         th.col-total { background: #e8f0fe; color: #1a73e8; font-weight: 600; min-width: 80px; width: 80px; }
         th.col-acao { width: 36px; background: #f1f3f4; }
@@ -207,11 +219,15 @@ export default function FinanceiroGabrielPage() {
         td.celula { padding: 0; }
         td.celula:hover { background: #f8f9fa; }
         td.celula.st-pago { background: rgba(24,128,56,0.08); }
-        td.celula.st-pendente { background: rgba(217,48,37,0.08); }
+        td.celula.st-pendente { background: rgba(251,188,4,0.15); }
         td.celula.st-pago:hover { background: rgba(24,128,56,0.15); }
-        td.celula.st-pendente:hover { background: rgba(217,48,37,0.15); }
+        td.celula.st-pendente:hover { background: rgba(251,188,4,0.25); }
         td.total { background: #f1f3f4; font-weight: 600; color: #1a73e8; padding: 4px 8px; text-align: right; font-size: 11px; }
         td.acao { background: #f8f9fa; padding: 0; }
+        td.vencimento { background: #f8f9fa; padding: 0; text-align: center; }
+        .venc-input { width: 100%; height: 100%; border: none; background: transparent; text-align: center; font-size: 11px; color: #5f6368; font-family: inherit; outline: none; padding: 4px 0; font-weight: 500; }
+        .venc-input:focus { background: #fff; box-shadow: inset 0 0 0 2px #1a73e8; }
+        .venc-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
         .nome-wrap { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
         .nome-texto { flex: 1; }
@@ -248,7 +264,7 @@ export default function FinanceiroGabrielPage() {
         }
         td.celula:hover .cel-seta { color: #5f6368; }
         td.celula.st-pago .cel-seta { color: #188038; background: rgba(24,128,56,0.15); }
-        td.celula.st-pendente .cel-seta { color: #d93025; background: rgba(217,48,37,0.15); }
+        td.celula.st-pendente .cel-seta { color: #F9AB00; background: rgba(251,188,4,0.2); }
         .cel-seta:hover { transform: scale(1.15); }
         td.celula.st-vazio .cel-seta { color: #bdc1c6; }
 
@@ -291,6 +307,16 @@ export default function FinanceiroGabrielPage() {
           onChange={(e) => setNovoNome(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && adicionar()}
         />
+        <span style={{ color: "#5f6368", fontSize: 11 }}>Venc.:</span>
+        <input
+          className="campo"
+          type="number"
+          min="1"
+          max="31"
+          value={novoVencimento}
+          onChange={(e) => setNovoVencimento(parseInt(e.target.value) || 10)}
+          style={{ minWidth: 60, width: 60, textAlign: "center" }}
+        />
         <button className="btn" onClick={adicionar} disabled={!novoNome.trim()}>
           + Adicionar
         </button>
@@ -322,6 +348,7 @@ export default function FinanceiroGabrielPage() {
               <tr>
                 <th className="col-idx"></th>
                 <th className="col-nome">Despesa</th>
+                <th className="col-vencimento">Venc.</th>
                 {MESES.map((m) => <th key={m} className="col-mes">{m}</th>)}
                 <th className="col-total">Total</th>
                 <th className="col-acao"></th>
@@ -356,9 +383,23 @@ export default function FinanceiroGabrielPage() {
                       </div>
                     )}
                   </td>
+                  <td className="vencimento">
+                    <input
+                      className="venc-input"
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={d.vencimento || 10}
+                      onChange={(e) => {
+                        const dia = parseInt(e.target.value);
+                        if (dia >= 1 && dia <= 31) atualizarVencimento(d.id, dia);
+                      }}
+                      title="Dia do vencimento"
+                    />
+                  </td>
                   {MESES.map((_, mesIdx) => {
                     const dados = d.valores[mesIdx] || { valor: 0, status: "vazio" as Status };
-                    const setaLabel = dados.status === "pago" ? "✓" : dados.status === "pendente" ? "!" : "○";
+                    const setaLabel = dados.status === "pago" ? "✓" : dados.status === "pendente" ? "●" : "○";
                     return (
                       <td key={mesIdx} className={`celula st-${dados.status}`}>
                         <div className="cel-wrap">
@@ -393,6 +434,7 @@ export default function FinanceiroGabrielPage() {
               <tr>
                 <td className="idx"></td>
                 <td className="nome">Total mensal</td>
+                <td></td>
                 {MESES.map((_, i) => (
                   <td key={i} style={{ padding: "8px", textAlign: "right" }}>
                     {formatarMoeda(totalMes(i)) || "—"}
