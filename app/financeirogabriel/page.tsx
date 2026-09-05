@@ -35,6 +35,8 @@ function parseInputMoeda(valorFormatado: string): number {
 
 export default function FinanceiroGabrielPage() {
   const [autenticado, setAutenticado] = useState<boolean>(false);
+  const [expandido, setExpandido] = useState<string | null>(null);
+  const [mesAtual, setMesAtual] = useState<number>(new Date().getMonth());
   const [senhaInput, setSenhaInput] = useState<string>("");
   const [senhaErro, setSenhaErro] = useState<boolean>(false);
   const [despesas, setDespesas] = useState<Despesa[]>([]);
@@ -372,6 +374,122 @@ export default function FinanceiroGabrielPage() {
         .spinner { display: inline-block; width: 10px; height: 10px; border: 2px solid #e0e0e0; border-top-color: #1a73e8; border-radius: 50%; animation: spin 0.6s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        
+
+        /* ========== MOBILE VIEW (cards estilo app) ========== */
+        .mobile-view { display: none; }
+        .desktop-view { display: block; }
+
+        @media (max-width: 900px) {
+          .desktop-view { display: none; }
+          .mobile-view { display: block; padding: 12px; background: #f8f9fa; min-height: calc(100vh - 100px); }
+
+          /* Seletor de mes no topo */
+          .mes-seletor { display: flex; gap: 6px; overflow-x: auto; padding: 8px 4px 12px; margin-bottom: 8px; -webkit-overflow-scrolling: touch; }
+          .mes-seletor::-webkit-scrollbar { display: none; }
+          .mes-btn {
+            flex-shrink: 0; padding: 8px 14px; border-radius: 20px; border: 1px solid #dadce0;
+            background: #fff; color: #5f6368; font-size: 12px; font-weight: 500;
+            cursor: pointer; white-space: nowrap; transition: all 0.15s;
+          }
+          .mes-btn.ativo { background: #1a73e8; color: #fff; border-color: #1a73e8; font-weight: 600; }
+          .mes-btn:not(.ativo):hover { background: #f1f3f4; }
+
+          /* Header do mes */
+          .mes-header { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 4px 16px; }
+          .mes-titulo { font-size: 22px; font-weight: 600; color: #202124; }
+          .mes-total-info { text-align: right; }
+          .mes-total-valor { font-size: 20px; font-weight: 700; color: #202124; letter-spacing: -0.02em; }
+          .mes-total-label { font-size: 11px; color: #5f6368; }
+
+          /* Card de conta */
+          .conta-card {
+            background: #fff; border-radius: 12px; padding: 14px 16px;
+            margin-bottom: 10px; display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.15s;
+          }
+          .conta-card.st-pago { border-left: 4px solid #34a853; }
+          .conta-card.st-pendente { border-left: 4px solid #f9ab00; }
+          .conta-card.st-vazio { border-left: 4px solid #dadce0; }
+
+          .conta-nome { font-size: 15px; font-weight: 500; color: #202124; margin-bottom: 2px; }
+          .conta-venc { font-size: 11px; color: #5f6368; display: flex; align-items: center; gap: 4px; }
+          .conta-info { flex: 1; min-width: 0; }
+          .conta-valor-wrap { text-align: right; flex-shrink: 0; }
+          .conta-valor-input {
+            border: none; background: transparent; font-size: 18px; font-weight: 700;
+            color: #202124; text-align: right; width: 120px; padding: 4px 0; outline: none;
+            letter-spacing: -0.01em;
+          }
+          .conta-valor-input:focus { color: #1a73e8; }
+          .conta-valor-input.pago { color: #188038; }
+          .conta-valor-input.pendente { color: #f9ab00; }
+
+          .conta-status-btn {
+            width: 40px; height: 40px; border-radius: 50%; border: 2px solid #dadce0;
+            background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: 700; color: #dadce0; flex-shrink: 0;
+            transition: all 0.15s;
+          }
+          .conta-status-btn.pago { background: #34a853; border-color: #34a853; color: #fff; }
+          .conta-status-btn.pendente { background: #f9ab00; border-color: #f9ab00; color: #fff; }
+          .conta-status-btn:active { transform: scale(0.9); }
+
+          /* Resumo do mes no rodape */
+          .resumo-mes {
+            background: #fff; border-radius: 12px; padding: 16px;
+            margin-top: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+          }
+          .resumo-linha { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+          .resumo-linha b { font-weight: 600; }
+          .resumo-linha.total { border-top: 1px solid #e0e0e0; margin-top: 6px; padding-top: 12px; font-size: 15px; }
+          .resumo-pago b { color: #188038; }
+          .resumo-pendente b { color: #f9ab00; }
+
+          /* Adicionar/toolbar mobile */
+          .toolbar-mobile {
+            background: #fff; padding: 12px; display: flex; flex-direction: column; gap: 8px;
+            border-bottom: 1px solid #e0e0e0;
+          }
+          .toolbar-mobile-linha { display: flex; gap: 8px; }
+          .toolbar-mobile input {
+            flex: 1; padding: 10px 12px; font-size: 14px; border: 1px solid #dadce0;
+            border-radius: 6px; outline: none;
+          }
+          .toolbar-mobile input:focus { border-color: #1a73e8; }
+          .toolbar-mobile .venc-mobile { max-width: 80px; text-align: center; }
+          .toolbar-mobile button {
+            background: #1a73e8; color: #fff; border: none; padding: 10px 18px;
+            border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer;
+          }
+          .toolbar-mobile button:disabled { opacity: 0.5; }
+
+          .totais-topo {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+            padding: 12px; background: #fff; border-bottom: 1px solid #e0e0e0;
+          }
+          .totais-topo-item { text-align: center; }
+          .totais-topo-label { font-size: 10px; color: #5f6368; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+          .totais-topo-valor { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
+
+          .vazio-mobile {
+            text-align: center; padding: 40px 20px; color: #5f6368; font-size: 13px;
+            background: #fff; border-radius: 12px; margin: 12px 0;
+          }
+
+          /* Botao de acao inferior */
+          .btn-lixo-mobile {
+            background: transparent; border: none; color: #d93025; font-size: 18px;
+            padding: 8px 12px; cursor: pointer; opacity: 0.6;
+          }
+
+          /* Ocultar barra info no mobile */
+          .barra-info { display: none; }
+          .barra-status { font-size: 11px; }
+        }
+
+
         @media (max-width: 768px) {
           .campo { min-width: 140px; }
           .contador { display: none; }
@@ -438,7 +556,7 @@ export default function FinanceiroGabrielPage() {
         </div>
       </div>
 
-      <div className="planilha">
+      <div className="desktop-view planilha">
         {carregando ? (
           <div className="vazio"><span className="spinner" /> Carregando...</div>
         ) : despesasDoAno.length === 0 ? (
@@ -551,6 +669,118 @@ export default function FinanceiroGabrielPage() {
           </table>
         )}
       </div>
+
+      {/* ========== MOBILE VIEW ========== */}
+      <div className="mobile-view">
+        <div className="toolbar-mobile">
+          <div className="toolbar-mobile-linha">
+            <input
+              type="text"
+              placeholder="Nome da despesa (ex: Água)"
+              value={novoNome}
+              onChange={(e) => setNovoNome(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && adicionar()}
+            />
+            <input
+              className="venc-mobile"
+              type="number"
+              placeholder="Dia"
+              min="1"
+              max="31"
+              value={novoVencimento}
+              onChange={(e) => setNovoVencimento(parseInt(e.target.value) || 10)}
+            />
+          </div>
+          <button onClick={adicionar} disabled={!novoNome.trim()}>+ Adicionar despesa</button>
+        </div>
+
+        <div className="totais-topo">
+          <div className="totais-topo-item">
+            <div className="totais-topo-label">Total</div>
+            <div className="totais-topo-valor">{formatarMoeda(totalAnual()) || "R$ 0"}</div>
+          </div>
+          <div className="totais-topo-item">
+            <div className="totais-topo-label">Pago</div>
+            <div className="totais-topo-valor cor-pago" style={{ color: "#188038" }}>{formatarMoeda(totalPago()) || "R$ 0"}</div>
+          </div>
+          <div className="totais-topo-item">
+            <div className="totais-topo-label">Pendente</div>
+            <div className="totais-topo-valor" style={{ color: "#f9ab00" }}>{formatarMoeda(totalPendente()) || "R$ 0"}</div>
+          </div>
+        </div>
+
+        <div className="mes-seletor">
+          {MESES.map((m, i) => (
+            <button
+              key={m}
+              className={`mes-btn ${mesAtual === i ? "ativo" : ""}`}
+              onClick={() => setMesAtual(i)}
+            >{m}</button>
+          ))}
+        </div>
+
+        <div className="mes-header">
+          <div className="mes-titulo">{MESES[mesAtual]} {ano}</div>
+          <div className="mes-total-info">
+            <div className="mes-total-valor">{formatarMoeda(totalMes(mesAtual)) || "R$ 0"}</div>
+            <div className="mes-total-label">total do mes</div>
+          </div>
+        </div>
+
+        {despesasDoAno.length === 0 ? (
+          <div className="vazio-mobile">
+            Nenhuma despesa em {ano}.<br />Adicione uma acima pra comecar.
+          </div>
+        ) : (
+          <>
+            {despesasDoAno.map((d) => {
+              const dados = d.valores[mesAtual] || { valor: 0, status: "vazio" as Status };
+              return (
+                <div key={d.id} className={`conta-card st-${dados.status}`}>
+                  <div className="conta-info">
+                    <div className="conta-nome">{d.nome}</div>
+                    <div className="conta-venc">
+                      Vence dia {d.vencimento || 10}
+                    </div>
+                  </div>
+                  <div className="conta-valor-wrap">
+                    <input
+                      className={`conta-valor-input ${dados.status}`}
+                      type="text"
+                      placeholder="R$ 0"
+                      value={dados.valor > 0 ? formatarMoeda(dados.valor) : ""}
+                      onChange={(e) => atualizarValor(d.id, mesAtual, parseInputMoeda(e.target.value))}
+                    />
+                  </div>
+                  <button
+                    className={`conta-status-btn ${dados.status}`}
+                    onClick={() => toggleStatus(d.id, mesAtual)}
+                    title="Toque pra mudar status"
+                  >
+                    {dados.status === "pago" ? "✓" : dados.status === "pendente" ? "●" : "○"}
+                  </button>
+                </div>
+              );
+            })}
+
+            <div className="resumo-mes">
+              <div className="resumo-linha resumo-pago">
+                <span>Pago em {MESES[mesAtual]}</span>
+                <b>{formatarMoeda(despesasDoAno.reduce((s, d) => s + (d.valores[mesAtual]?.status === "pago" ? d.valores[mesAtual].valor : 0), 0)) || "R$ 0"}</b>
+              </div>
+              <div className="resumo-linha resumo-pendente">
+                <span>Pendente em {MESES[mesAtual]}</span>
+                <b>{formatarMoeda(despesasDoAno.reduce((s, d) => s + (d.valores[mesAtual]?.status === "pendente" ? d.valores[mesAtual].valor : 0), 0)) || "R$ 0"}</b>
+              </div>
+              <div className="resumo-linha total">
+                <span>Total do mes</span>
+                <b>{formatarMoeda(totalMes(mesAtual)) || "R$ 0"}</b>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
     </>
   );
 }
