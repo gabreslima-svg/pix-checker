@@ -60,7 +60,7 @@ export default function YouFlixLanding() {
         }
         .hero .container { position: relative; z-index: 1; }
         .hero::after { display: none; }
-        .hero-inner { display: block; max-width: 720px; margin: 0; position: relative; z-index: 1; text-align: left; }
+        .hero-inner { display: block; max-width: 720px; margin: 0 auto; position: relative; z-index: 1; text-align: center; }
         .hero {
           padding: 80px 0 60px;
           position: relative;
@@ -100,7 +100,7 @@ export default function YouFlixLanding() {
         }
         .hero-sub {
           font-size: 18px; color: #E5E5E5;
-          margin: 0 0 32px; line-height: 1.55; max-width: 520px;
+          margin: 0 auto 32px; line-height: 1.55; max-width: 520px;
           text-shadow: 0 2px 12px rgba(0,0,0,0.7);
         }
         .hero-sub strong { color: var(--branco); }
@@ -110,7 +110,7 @@ export default function YouFlixLanding() {
         
         
 
-        .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px; justify-content: flex-start; }
+        .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px; justify-content: center; }
         .btn-primary {
           background: linear-gradient(135deg, var(--vermelho), var(--roxo));
           color: var(--branco); padding: 16px 28px; border-radius: 10px;
@@ -458,7 +458,7 @@ function Hero() {
             </div>
             <div className="hero-actions">
               <a href={LINK_WHATSAPP} target="_blank" rel="noopener noreferrer" className="btn-primary">
-                Começar agora
+                Testar grátis
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </a>
               <a href="#conteudo" className="btn-secondary">Explorar</a>
