@@ -245,6 +245,70 @@ export default function YouFlixLanding() {
           color: var(--cinza-1);
           font-weight: 500;
         }
+        
+
+        /* ============ FAIXA DE DISPOSITIVOS NO HERO ============ */
+        .hero-dispositivos {
+          margin-top: 40px;
+          padding: 24px 20px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 14px;
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+        }
+        .hero-disp-titulo {
+          font-size: 11px;
+          color: var(--cinza-1);
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          font-weight: 500;
+          margin-bottom: 16px;
+          text-align: center;
+        }
+        .hero-disp-lista {
+          display: flex;
+          gap: 32px;
+          justify-content: center;
+          flex-wrap: wrap;
+          align-items: center;
+          margin-bottom: 12px;
+        }
+        .hero-disp-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          color: var(--branco);
+          transition: transform 0.15s;
+        }
+        .hero-disp-item:hover {
+          transform: translateY(-2px);
+        }
+        .hero-disp-item svg {
+          opacity: 0.85;
+        }
+        .hero-disp-item span {
+          font-size: 11px;
+          font-weight: 500;
+          color: var(--cinza-1);
+          letter-spacing: 0.02em;
+        }
+        .hero-disp-marcas {
+          font-size: 11px;
+          color: var(--cinza-2);
+          text-align: center;
+          font-weight: 400;
+          letter-spacing: 0.02em;
+          border-top: 1px solid rgba(255,255,255,0.05);
+          padding-top: 12px;
+        }
+        @media (max-width: 600px) {
+          .hero-dispositivos { margin-top: 32px; padding: 20px 16px; }
+          .hero-disp-lista { gap: 20px; }
+          .hero-disp-marcas { font-size: 10px; }
+        }
+
         @media (max-width: 900px) {
           .hero-inner { text-align: center; margin: 0 auto; }
           .hero-sub { margin: 0 auto 32px; }
@@ -414,7 +478,6 @@ export default function YouFlixLanding() {
       <Nav />
       <Hero />
       <Conteudo />
-      <Dispositivos />
       <ComoFunciona />
       <Oferta />
       <Faq />
@@ -433,7 +496,6 @@ function Nav() {
         </a>
         <div className="nav-links">
           <a href="#conteudo">Conteudo</a>
-          <a href="#dispositivos">Dispositivos</a>
           <a href="#oferta">Assinar</a>
           <a href="#faq">FAQ</a>
         </div>
@@ -539,51 +601,6 @@ function Conteudo() {
               <div className="categoria-num">{c.num}</div>
               <h3>{c.titulo}</h3>
               <p>{c.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Dispositivos() {
-  const disp = [
-    { titulo: "Smart TV", desc: "Samsung, LG, Roku, TCL", icone: (
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/>
-      </svg>
-    )},
-    { titulo: "TV Box", desc: "Android TV, Fire Stick, Mi Box", icone: (
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="3" y="8" width="18" height="10" rx="2"/><circle cx="8" cy="13" r="1"/><path d="M12 13h5"/>
-      </svg>
-    )},
-    { titulo: "Celular / Tablet", desc: "iOS e Android", icone: (
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>
-      </svg>
-    )},
-    { titulo: "PC / Notebook", desc: "Windows, Mac, Linux", icone: (
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="2" y="4" width="20" height="12" rx="2"/><path d="M2 20h20"/>
-      </svg>
-    )},
-  ];
-  return (
-    <section id="dispositivos">
-      <div className="container">
-        <div className="dispositivos-header">
-          <div className="section-eyebrow">Compatibilidade</div>
-          <h2 className="section-titulo">Compatível com o que você já tem.</h2>
-          <p className="section-sub">Use em até 3 dispositivos ao mesmo tempo.</p>
-        </div>
-        <div className="dispositivos-grid">
-          {disp.map((d, i) => (
-            <div className="dispositivo" key={i}>
-              <div className="dispositivo-icone">{d.icone}</div>
-              <h3>{d.titulo}</h3>
-              <p>{d.desc}</p>
             </div>
           ))}
         </div>
