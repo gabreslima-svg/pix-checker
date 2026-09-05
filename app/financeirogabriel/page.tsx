@@ -13,15 +13,23 @@ type Despesa = {
 const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 function formatarMoeda(n: number): string {
-  if (n === 0) return "";
+  if (!n || n === 0) return "";
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function parseValor(s: string): number {
-  if (!s) return 0;
-  const limpo = s.replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".");
-  const num = parseFloat(limpo);
-  return isNaN(num) ? 0 : num;
+// Formata enquanto digita: "1500" -> "R$ 15,00", "150000" -> "R$ 1.500,00"
+function formatarInputMoeda(valorBruto: string): string {
+  const soDigitos = valorBruto.replace(/\D/g, "");
+  if (!soDigitos) return "";
+  const numero = parseInt(soDigitos, 10) / 100;
+  return numero.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+// Converte "R$ 1.500,00" -> 1500
+function parseInputMoeda(valorFormatado: string): number {
+  const soDigitos = valorFormatado.replace(/\D/g, "");
+  if (!soDigitos) return 0;
+  return parseInt(soDigitos, 10) / 100;
 }
 
 export default function FinanceiroGabrielPage() {
@@ -32,10 +40,11 @@ export default function FinanceiroGabrielPage() {
   const [carregando, setCarregando] = useState(true);
   const [ultimoSalvo, setUltimoSalvo] = useState<string>("");
   const [erro, setErro] = useState<string>("");
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [editandoNome, setEditandoNome] = useState<string | null>(null);
+  const [nomeTemp, setNomeTemp] = useState("");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const primeiraCarga = useRef(true);
 
-  // Carrega do servidor ao abrir
   useEffect(() => {
     (async () => {
       try {
@@ -54,7 +63,6 @@ export default function FinanceiroGabrielPage() {
     })();
   }, []);
 
-  // Salva automaticamente com debounce
   const salvarNoServidor = useCallback(async (novasDespesas: Despesa[]) => {
     try {
       setSalvando(true);
@@ -75,7 +83,6 @@ export default function FinanceiroGabrielPage() {
     }
   }, []);
 
-  // Dispara save com debounce sempre que despesas mudar
   useEffect(() => {
     if (primeiraCarga.current) {
       if (!carregando) primeiraCarga.current = false;
@@ -105,11 +112,27 @@ export default function FinanceiroGabrielPage() {
     setDespesas(despesas.filter((d) => d.id !== id));
   }
 
-  function atualizar(id: string, mes: number, campo: "valor" | "status", val: any) {
+  function iniciarEdicaoNome(id: string, nomeAtual: string) {
+    setEditandoNome(id);
+    setNomeTemp(nomeAtual);
+  }
+
+  function salvarNome(id: string) {
+    const novoNome = nomeTemp.trim();
+    if (!novoNome) {
+      setEditandoNome(null);
+      return;
+    }
+    setDespesas(despesas.map((d) => (d.id === id ? { ...d, nome: novoNome } : d)));
+    setEditandoNome(null);
+    setNomeTemp("");
+  }
+
+  function atualizarValor(id: string, mes: number, val: number) {
     setDespesas(despesas.map((d) => {
       if (d.id !== id) return d;
       const atual = d.valores[mes] || { valor: 0, status: "vazio" as Status };
-      return { ...d, valores: { ...d.valores, [mes]: { ...atual, [campo]: val } } };
+      return { ...d, valores: { ...d.valores, [mes]: { ...atual, valor: val } } };
     }));
   }
 
@@ -118,10 +141,13 @@ export default function FinanceiroGabrielPage() {
     if (!d) return;
     const atual = d.valores[mes]?.status || "vazio";
     const prox: Status = atual === "vazio" ? "pendente" : atual === "pendente" ? "pago" : "vazio";
-    atualizar(id, mes, "status", prox);
+    setDespesas(despesas.map((dd) => {
+      if (dd.id !== id) return dd;
+      const at = dd.valores[mes] || { valor: 0, status: "vazio" as Status };
+      return { ...dd, valores: { ...dd.valores, [mes]: { ...at, status: prox } } };
+    }));
   }
 
-  // Filtra por ano selecionado
   const despesasDoAno = despesas.filter((d) => d.ano === ano);
 
   const totalMes = (m: number) => despesasDoAno.reduce((s, d) => s + (d.valores[m]?.valor || 0), 0);
@@ -166,12 +192,12 @@ export default function FinanceiroGabrielPage() {
 
         .planilha { overflow-x: auto; background: #fff; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th, td { border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; padding: 0; text-align: center; vertical-align: middle; height: 32px; }
+        th, td { border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; padding: 0; text-align: center; vertical-align: middle; height: 36px; }
         th { background: #f8f9fa; color: #5f6368; font-weight: 500; font-size: 11px; padding: 6px 8px; position: sticky; top: 0; z-index: 2; }
         th.col-idx { background: #f1f3f4; width: 32px; }
-        th.col-nome { text-align: left; padding-left: 12px; min-width: 160px; }
-        th.col-mes { min-width: 90px; }
-        th.col-total { background: #e8f0fe; color: #1a73e8; font-weight: 600; min-width: 90px; }
+        th.col-nome { text-align: left; padding-left: 12px; min-width: 180px; }
+        th.col-mes { min-width: 130px; }
+        th.col-total { background: #e8f0fe; color: #1a73e8; font-weight: 600; min-width: 110px; }
         th.col-acao { width: 36px; background: #f1f3f4; }
 
         td { position: relative; }
@@ -187,22 +213,44 @@ export default function FinanceiroGabrielPage() {
         td.total { background: #f1f3f4; font-weight: 600; color: #1a73e8; padding: 6px 10px; text-align: right; }
         td.acao { background: #f8f9fa; padding: 0; }
 
-        .cel-input { width: 100%; height: 32px; border: none; background: transparent; text-align: right; padding: 0 24px 0 8px; font-size: 12px; color: #202124; font-family: inherit; outline: none; }
-        .cel-input:focus { background: #fff; box-shadow: inset 0 0 0 2px #1a73e8; }
+        .nome-wrap { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .nome-texto { flex: 1; }
+        .btn-editar {
+          background: transparent; border: none; color: #5f6368; cursor: pointer;
+          padding: 4px; border-radius: 3px; opacity: 0; transition: opacity 0.15s;
+          font-size: 12px; line-height: 1;
+        }
+        tr:hover .btn-editar { opacity: 0.6; }
+        .btn-editar:hover { opacity: 1 !important; background: rgba(0,0,0,0.05); }
+        .nome-input {
+          width: 100%; border: 1px solid #1a73e8; border-radius: 4px;
+          padding: 4px 8px; font-size: 12px; color: #202124; font-family: inherit;
+          outline: none; background: #fff;
+        }
+
+        .cel-wrap { display: flex; align-items: center; padding: 0 4px 0 8px; height: 36px; }
+        .cel-input {
+          flex: 1; border: none; background: transparent;
+          text-align: right; padding: 0 4px 0 0; font-size: 12px;
+          color: #202124; font-family: inherit; outline: none;
+          min-width: 0;
+        }
+        .cel-input:focus { background: #fff; box-shadow: inset 0 0 0 2px #1a73e8; border-radius: 2px; }
         .cel-input::placeholder { color: #bdc1c6; font-weight: 400; }
 
-        .cel-check {
-          position: absolute; top: 50%; right: 4px; transform: translateY(-50%);
-          width: 16px; height: 16px; border: none; background: transparent;
-          color: #bdc1c6; font-size: 11px; cursor: pointer; border-radius: 3px;
+        .cel-seta {
+          background: transparent; border: none; cursor: pointer;
+          width: 20px; height: 20px; border-radius: 3px;
           display: flex; align-items: center; justify-content: center;
-          font-weight: 700; line-height: 1; padding: 0; opacity: 0;
-          transition: opacity 0.15s;
+          color: #bdc1c6; font-size: 10px; font-weight: 700;
+          padding: 0; flex-shrink: 0; margin-left: 2px;
+          transition: all 0.15s;
         }
-        td.celula:hover .cel-check { opacity: 1; }
-        td.celula.st-pago .cel-check { opacity: 1; color: #188038; }
-        td.celula.st-pendente .cel-check { opacity: 1; color: #d93025; }
-        .cel-check:hover { background: rgba(0,0,0,0.05); }
+        td.celula:hover .cel-seta { color: #5f6368; }
+        td.celula.st-pago .cel-seta { color: #188038; background: rgba(24,128,56,0.15); }
+        td.celula.st-pendente .cel-seta { color: #d93025; background: rgba(217,48,37,0.15); }
+        .cel-seta:hover { transform: scale(1.15); }
+        td.celula.st-vazio .cel-seta { color: #bdc1c6; }
 
         .btn-lixo { background: transparent; border: none; color: #5f6368; cursor: pointer; padding: 6px; font-size: 14px; line-height: 1; opacity: 0.5; }
         tr:hover .btn-lixo { opacity: 1; }
@@ -283,27 +331,54 @@ export default function FinanceiroGabrielPage() {
               {despesasDoAno.map((d, idx) => (
                 <tr key={d.id}>
                   <td className="idx">{idx + 1}</td>
-                  <td className="nome">{d.nome}</td>
+                  <td className="nome">
+                    {editandoNome === d.id ? (
+                      <input
+                        className="nome-input"
+                        type="text"
+                        value={nomeTemp}
+                        autoFocus
+                        onChange={(e) => setNomeTemp(e.target.value)}
+                        onBlur={() => salvarNome(d.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") salvarNome(d.id);
+                          if (e.key === "Escape") setEditandoNome(null);
+                        }}
+                      />
+                    ) : (
+                      <div className="nome-wrap">
+                        <span className="nome-texto">{d.nome}</span>
+                        <button
+                          className="btn-editar"
+                          onClick={() => iniciarEdicaoNome(d.id, d.nome)}
+                          title="Editar nome"
+                        >✎</button>
+                      </div>
+                    )}
+                  </td>
                   {MESES.map((_, mesIdx) => {
                     const dados = d.valores[mesIdx] || { valor: 0, status: "vazio" as Status };
+                    const setaLabel = dados.status === "pago" ? "✓" : dados.status === "pendente" ? "!" : "○";
                     return (
                       <td key={mesIdx} className={`celula st-${dados.status}`}>
-                        <input
-                          className="cel-input"
-                          type="text"
-                          placeholder="—"
-                          value={dados.valor > 0 ? dados.valor.toString().replace(".", ",") : ""}
-                          onChange={(e) => atualizar(d.id, mesIdx, "valor", parseValor(e.target.value))}
-                        />
-                        {dados.valor > 0 && (
+                        <div className="cel-wrap">
+                          <input
+                            className="cel-input"
+                            type="text"
+                            placeholder="—"
+                            value={dados.valor > 0 ? formatarMoeda(dados.valor) : ""}
+                            onChange={(e) => atualizarValor(d.id, mesIdx, parseInputMoeda(e.target.value))}
+                          />
                           <button
-                            className="cel-check"
+                            className="cel-seta"
                             onClick={(e) => { e.stopPropagation(); toggleStatus(d.id, mesIdx); }}
-                            title={dados.status === "pago" ? "Pago" : dados.status === "pendente" ? "Pendente" : "Marcar"}
-                          >
-                            {dados.status === "pago" ? "✓" : dados.status === "pendente" ? "!" : "○"}
-                          </button>
-                        )}
+                            title={
+                              dados.status === "pago" ? "Pago (clique pra pendente)" :
+                              dados.status === "pendente" ? "Pendente (clique pra pago)" :
+                              "Vazio (clique pra pendente)"
+                            }
+                          >{setaLabel}</button>
+                        </div>
                       </td>
                     );
                   })}
