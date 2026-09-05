@@ -62,12 +62,9 @@ export default function YouFlixLanding() {
         .hero::after { display: none; }
         .hero-inner { display: block; max-width: 720px; margin: 0 auto; position: relative; z-index: 1; text-align: center; }
         .hero {
-          padding: 80px 0 200px;
+          padding: 80px 0 0;
           position: relative;
           overflow: hidden;
-          min-height: 720px;
-          display: flex;
-          align-items: center;
           background-color: #000000;
           background-image: url('/youflix-heropc.jpg');
           background-size: cover;
@@ -252,16 +249,14 @@ export default function YouFlixLanding() {
 
         /* ============ FAIXA DE DISPOSITIVOS NO HERO ============ */
         .hero-dispositivos {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          margin: 0;
+          margin: 60px -20px 0;
           padding: 14px 20px;
           background: rgba(0,0,0,0.35);
           border-top: 1px solid rgba(255,255,255,0.08);
+          border-bottom: 1px solid rgba(255,255,255,0.08);
           backdrop-filter: blur(8px);
           -webkit-backdrop-filter: blur(8px);
+          position: relative;
           z-index: 1;
         }
         .hero-disp-titulo {
