@@ -34,6 +34,9 @@ function parseInputMoeda(valorFormatado: string): number {
 }
 
 export default function FinanceiroGabrielPage() {
+  const [autenticado, setAutenticado] = useState<boolean>(false);
+  const [senhaInput, setSenhaInput] = useState<string>("");
+  const [senhaErro, setSenhaErro] = useState<boolean>(false);
   const [despesas, setDespesas] = useState<Despesa[]>([]);
   const [ano, setAno] = useState<number>(new Date().getFullYear());
   const [novoNome, setNovoNome] = useState("");
@@ -47,7 +50,36 @@ export default function FinanceiroGabrielPage() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const primeiraCarga = useRef(true);
 
+  // Verifica sessao ao abrir
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const salvo = localStorage.getItem("fin_auth");
+      if (salvo === "ok") setAutenticado(true);
+    }
+  }, []);
+
+  function tentarLogin(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    if (senhaInput === "ogabrielslma") {
+      setAutenticado(true);
+      setSenhaErro(false);
+      localStorage.setItem("fin_auth", "ok");
+      setSenhaInput("");
+    } else {
+      setSenhaErro(true);
+      setTimeout(() => setSenhaErro(false), 2000);
+    }
+  }
+
+  function sair() {
+    if (confirm("Sair da sessao?")) {
+      localStorage.removeItem("fin_auth");
+      setAutenticado(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!autenticado) return;
     (async () => {
       try {
         const res = await fetch("/api/financeiro");
@@ -63,7 +95,7 @@ export default function FinanceiroGabrielPage() {
         setCarregando(false);
       }
     })();
-  }, []);
+  }, [autenticado]);
 
   const salvarNoServidor = useCallback(async (novasDespesas: Despesa[]) => {
     try {
@@ -174,6 +206,64 @@ export default function FinanceiroGabrielPage() {
       (s, d) => s + Object.values(d.valores).reduce((sd, v) => sd + (v?.status === "pago" ? v.valor : 0), 0),
       0
     );
+
+  // Se nao autenticado, mostra tela de login
+  if (!autenticado) {
+    return (
+      <>
+        <style>{`
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { background: #f8f9fa; font-family: 'Google Sans', Roboto, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+          .login-wrap {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+          }
+          .login-card {
+            background: #fff; border: 1px solid #e0e0e0; border-radius: 12px;
+            padding: 40px 32px; width: 100%; max-width: 360px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+          }
+          .login-titulo { font-size: 20px; font-weight: 500; color: #202124; margin-bottom: 8px; text-align: center; }
+          .login-sub { font-size: 13px; color: #5f6368; margin-bottom: 28px; text-align: center; }
+          .login-input {
+            width: 100%; border: 1px solid #dadce0; border-radius: 6px;
+            padding: 12px 14px; font-size: 14px; color: #202124;
+            font-family: inherit; outline: none; margin-bottom: 12px;
+          }
+          .login-input:focus { border-color: #1a73e8; }
+          .login-input.erro { border-color: #d93025; animation: shake 0.4s; }
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+          }
+          .login-btn {
+            width: 100%; background: #1a73e8; color: #fff; border: none;
+            padding: 12px; border-radius: 6px; font-size: 14px; font-weight: 500;
+            cursor: pointer; transition: background 0.15s;
+          }
+          .login-btn:hover { background: #1765cc; }
+          .login-erro-msg { color: #d93025; font-size: 12px; margin-top: 8px; text-align: center; }
+        `}</style>
+        <div className="login-wrap">
+          <form className="login-card" onSubmit={tentarLogin}>
+            <div className="login-titulo">Financeiro · Gabriel</div>
+            <div className="login-sub">Area protegida. Digite a senha para continuar.</div>
+            <input
+              className={`login-input ${senhaErro ? "erro" : ""}`}
+              type="password"
+              placeholder="Senha"
+              value={senhaInput}
+              onChange={(e) => setSenhaInput(e.target.value)}
+              autoFocus
+            />
+            <button className="login-btn" type="submit">Entrar</button>
+            {senhaErro && <div className="login-erro-msg">Senha incorreta</div>}
+          </form>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -293,6 +383,20 @@ export default function FinanceiroGabrielPage() {
         <div className="barra-info">Sincronizado na nuvem</div>
         <div className="barra-status">
           {erro && <span className="erro-msg">⚠ {erro}</span>}
+          <button
+            onClick={sair}
+            style={{
+              background: "transparent",
+              border: "1px solid #dadce0",
+              color: "#5f6368",
+              padding: "4px 10px",
+              borderRadius: 4,
+              fontSize: 11,
+              cursor: "pointer",
+              marginLeft: 8
+            }}
+            title="Sair"
+          >Sair</button>
           {salvando && <><span className="spinner" /> <span className="salvando">Salvando...</span></>}
           {!salvando && ultimoSalvo && !erro && <span className="salvo">✓ Salvo às {ultimoSalvo}</span>}
         </div>
